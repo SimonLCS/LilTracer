@@ -471,6 +471,39 @@ protected:
  * @brief Direct lighting integrator class.
  */
 class ReSTIRIntegrator : public Integrator {
+    struct Sample {
+        vec3 x; // path
+        float W;// 1/pdf(x)
+    };
+
+    struct Reservoir {
+       
+        Sample s;
+        float w_sum;
+        /**
+         * @brief Add sample to the reservoir.
+         * @param x Input sample.
+         * @param w Sampel weight.
+         * @param u Uniform random variable.
+         */
+        void add_sample(const Sample& x, const float w, const float u) {
+            w_sum += w;
+            if (u < w / w_sum)
+                s = x;
+        }
+    };
+
+    int light_samples;
+    int brdf_samples;
+
+    Texture<Reservoir> reservoirs;
+    void generateSample() {
+        Reservoir r;
+        for (int i = 0; i < light_samples; i++) {
+            Light::Sample s = uniform_sample_one_light();
+        }
+        
+    }
 public:
     ReSTIRIntegrator()
         : Integrator("ReSTIRIntegrator")
