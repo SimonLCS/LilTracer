@@ -24,7 +24,7 @@
   ],
   "background": {
     "type": "EnvironmentLight",
-    "texture": "../envmaps/kloofendal_48d_partly_cloudy_puresky_1k.exr",
+    "texture": "../envmaps/hallstatt4_hd.exr",
     "intensity": 0.5
   },
   "nlight": [
