@@ -1,0 +1,67 @@
+{
+    "integrator": {
+      "type": "BrdfIntegrator"
+    },
+    "max_sample": 4096,
+    "brdf": [
+      {
+        "type": "RoughGGX",
+        "name": "base",
+        "rough_x": 0.01,
+        "rough_y": 0.01,
+        "eta": [100.0,100.0,100.0],
+        "kappa": [100.0,100.0,100.0],
+        "sample_visible_distribution" : true
+      },
+      {
+        "type": "Diffuse",
+        "name": "base2",
+        "albedo": [ 0.25, 0.25, 0.25 ]
+      },
+      {
+        "type": "RoughMicrograin",
+        "name": "mat",
+        "base": "base",
+        "tau": 0.9,
+        "rough_x": 1.0,
+        "rough_y": 1.0,
+        "eta": [0.18299,0.42108,1.37340],
+        "kappa": [3.4242,2.34590,1.77040],
+        "sample_visible_distribution" : true
+      },
+      {
+        "type": "Emissive",
+        "name": "sphere_brdf",
+        "intensity": [ 100.0, 100.0, 100.0 ]
+      }
+    ],
+    "background": {
+      "type": "EnvironmentLight",
+      "texture": "../envmaps/syferfontein_0d_clear_puresky_2k.exr",
+      "intensity": 1.0
+    },
+    "geometries": [
+      {
+        "type": "Mesh",
+        "brdf": "mat",
+        "filename": "plane.obj"
+      },
+      {
+        "type": "Mesh",
+        "brdf": "sphere_brdf",
+        "filename": "plane_light.obj"
+      }
+    ],
+    "sensor": {
+      "type": "Sensor",
+      "width": 512,
+      "height": 512
+    },
+    "camera": {
+      "type": "PerspectiveCamera",
+      "fov": 80,
+      "aspect": 1.0,
+      "center": [ 0.0, -1.0, 0.0 ],
+      "pos": [ 0, 1.0 ,-25.0 ]
+    }
+  }
