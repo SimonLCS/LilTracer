@@ -1,0 +1,94 @@
+{
+    "integrator": {
+      "type": "BrdfIntegrator"
+    },
+    "max_sample": 4096,
+    "brdf": [
+      {
+        "type": "Diffuse",
+        "name": "floor",
+        "albedo": [ 0.4, 0.4, 0.4 ]
+      },
+      {
+        "type": "RoughGGX",
+        "name": "base",
+        "rough_x": 0.01,
+        "rough_y": 0.01,
+        "eta": [100.0,100.0,100.0],
+        "kappa": [100.0,100.0,100.0],
+        "sample_visible_distribution" : true
+      },
+      {
+        "type": "Diffuse",
+        "name": "base2",
+        "albedo": [ 0.5, 0.5, 0.5 ]
+      },
+      {
+        "type": "RoughMicrograin",
+        "name": "mat",
+        "base": "base",
+        "tau": 0.9,
+        "rough_x": 0.3,
+        "rough_y": 0.3,
+        "eta": [0.18299,0.42108,1.37340],
+        "kappa": [3.4242,2.34590,1.77040],
+        "sample_visible_distribution" : true
+      },
+      {
+        "type": "DiffuseMicrograin",
+        "name": "mat_porous",
+        "base": "base",
+        "tau": 0.4,
+        "rough_x": 3.0,
+        "rough_y": 3.0,
+        "albedo": [0.18299,0.42108,0.67340],
+        "sample_visible_distribution" : true
+      }
+    ],
+    "background": {
+      "type": "EnvironmentLight",
+      "texture": "../envmaps/hallstatt4_hd.exr",
+      "intensity": 1.0
+    },
+    "nlight": [
+        {
+          "type": "DirectionnalLight",
+          "intensity": 1.0,
+          "dir": [ 0.0, -1.0, 1.0 ]
+        },
+        {
+          "type": "DirectionnalLight",
+          "intensity": 1.0,
+          "dir": [ 1.0, -1.0, 1.0 ]
+        }
+      ],
+    "geometries": [
+      {
+        "type": "Mesh",
+        "brdf": "mat",
+        "filename": "david_half.obj"
+      },
+      {
+        "type": "Mesh",
+        "brdf": "mat_porous",
+        "filename": "david_skull.obj"
+      },
+      {
+        "type": "Mesh",
+        "brdf": "floor",
+        "filename": "studio.obj"
+      }
+    ],
+    "sensor": {
+      "type": "VarianceSensor",
+      "width": 512,
+      "height": 512
+    },
+    "camera": {
+      "type": "PerspectiveCamera",
+      "fov": 40,
+      "aspect": 1.0,
+      "center": [ 0.0, 0.16, 0.0 ],
+      "pos": [ 0.0, 0.296106, -0.933605 ]
+    }
+  }
