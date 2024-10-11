@@ -458,7 +458,13 @@ public:
                 vec3 p = si.pos - r.d * 0.00001f;
                 r = Ray(p, si.to_world(bs.wo));
 
-            } 
+            }
+            else {
+                for (const auto& light : scene.infinite_lights) {
+                    s += throughput * light->eval(r.d);
+                    return s;
+                }
+            }
         }
 
         return s;
