@@ -198,7 +198,7 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
         // Set the integrator in the renderer
         ren.integrator = integrator;
     } else {
-        Log(logWarning) << "Abort generate_from_json, cause : Missing integrator in file " << path;
+        Log(logWarning) << "generate_from_json, cause : Missing integrator in file " << path;
     }
 
     // Parse Sensor
@@ -215,7 +215,7 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
 
         ren.sensor = sensor;
     } else {
-        Log(logWarning) << "Abort generate_from_json, cause : Missing sensor in file " << path;
+        Log(logWarning) << "generate_from_json, cause : Missing sensor in file " << path;
     }
 
     // Parse Camera
@@ -233,7 +233,7 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
         // Set the camera in the renderer
         ren.camera = camera;
     } else {
-        Log(logWarning) << "Abort generate_from_json, cause : Missing camera in file " << path;
+        Log(logWarning) << "generate_from_json, cause : Missing camera in file " << path;
     }
 
     // Parse BRDF
@@ -255,7 +255,7 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
             scn.brdfs.push_back(brdf);
         }
     } else {
-        Log(logWarning) << "Abort generate_from_json, cause : Missing brdf in file " << path;
+        Log(logWarning) << "generate_from_json, cause : Missing brdf in file " << path;
     }
 
     // Parse Background
@@ -289,7 +289,7 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
             scn.lights.push_back(light);
         }
     } else {
-        Log(logWarning) << "Abort generate_from_json, cause : Missing light in file " << path;
+        Log(logWarning) << "generate_from_json, cause : Missing light in file " << path;
     }
 
     // Parse Geometrys
@@ -316,7 +316,7 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
             scn.geometries.push_back(geometry);
         }
     } else {
-        Log(logWarning) << "Abort generate_from_json, cause : Missing geometries in file " << path;
+        Log(logWarning) << "generate_from_json, cause : Missing geometries in file " << path;
     }
 
     // Initialize the scene's acceleration structure
@@ -328,6 +328,11 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
 static bool generate_from_path(const std::string& path, Scene& scn, Renderer& ren) {
     if (path.ends_with(".json")) {
         std::ifstream t(path);
+        if (t.fail()) {
+            Log(logError) << "generate_from_path: file not found (" << path << ")";
+            return false;
+        }
+
         t.seekg(0, std::ios::end);
         size_t size = t.tellg();
         std::string str(size, ' ');
@@ -336,7 +341,7 @@ static bool generate_from_path(const std::string& path, Scene& scn, Renderer& re
 
         return generate_from_json(path, str, scn, ren);
     }
-    Log(logError) << "Abort generate_from_path: file format not supported (" << path << ")";
+    Log(logError) << "generate_from_path: file format not supported (" << path << ")";
     return false;
 }
 

@@ -13,7 +13,7 @@ static int save_sensor_exr(const Sensor& sen, const std::string& filename)
     namespace fs = std::filesystem;
     fs::path p("./"+filename);
     fs::path d = p.parent_path();
-    if (!fs::is_directory(d) || !fs::exists(d)) { // Check if src folder exists
+    if (!fs::exists(d) || !fs::is_directory(d)) { // Check if src folder exists
         fs::create_directories(d); // create src folder
     }
 
@@ -21,11 +21,11 @@ static int save_sensor_exr(const Sensor& sen, const std::string& filename)
     int ret = SaveEXR((float*)sen.value.data(), sen.w, sen.h, 3, 0,
         filename.c_str(), &err);
     if (ret != TINYEXR_SUCCESS) {
-        Log(logError) << "Save EXR err : " << err;
+        Log(logError) << "SaveEXR err : " << err;
         return ret;
     }
 
-    Log(logInfo) << "Saved exr file. [ " << filename << "]";
+    Log(logHighlight) << "Saved exr file. [ " << filename << "]";
 
     return 0;
 };

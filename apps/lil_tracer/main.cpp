@@ -4,7 +4,7 @@
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
 
-void printProgress(double percentage, float t) {
+void print_progress(double percentage, float t) {
     int val = (int)(percentage * 100);
     int lpad = (int)(percentage * PBWIDTH);
     int rpad = PBWIDTH - lpad;
@@ -14,8 +14,8 @@ void printProgress(double percentage, float t) {
 }
 
 int main(int argc, char* argv[])
-{
-    lt::Log::level = lt::logWarning;
+{   
+    lt::State::log_level = lt::logWarning;
     for (int a = 1; a < argc; a++) {
 
         lt::Renderer ren;
@@ -30,14 +30,12 @@ int main(int argc, char* argv[])
 
             time += t;
 
-            printProgress(double(s) / double(ren.max_sample - 1.0), t);
+            print_progress(double(s) / double(ren.max_sample - 1.0), t);
         }
 
         std::cout << "\nTime elapsed : " << time << " (ms) " << std::endl;
 
-        if (lt::save_sensor_exr(*ren.sensor, std::string(argv[a]) + ".exr") == 0) {
-            
-        }
+        lt::save_sensor_exr(*ren.sensor, std::string(argv[a]) + ".exr");
         
     }
 

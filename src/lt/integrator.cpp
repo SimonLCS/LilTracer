@@ -9,7 +9,7 @@ Factory<Integrator>::CreatorRegistry& Factory<Integrator>::registry()
         { "BrdfIntegrator", std::make_shared<BrdfIntegrator> },
         { "PathIntegrator", std::make_shared<PathIntegrator> },
         { "DirectIntegrator", std::make_shared<DirectIntegrator> },
-        { "ReSTIRIntegrator", std::make_shared<ReSTIRIntegrator> },
+        { "GonioIntegrator", std::make_shared<GonioIntegrator> },
         { "AOIntegrator", std::make_shared<AOIntegrator> }
     };
     return registry;

@@ -16,7 +16,7 @@
 #include <imgui_impl_glfw.h>
 #include <implot.h>
 
-
+std::string exec_path;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -81,7 +81,7 @@ void AppInit(AppData& app_data) {
     need_reset = false;
 
     app_data.envmap = std::make_shared<lt::EnvironmentLight>();
-    lt::load_texture_exr("../../../data/envmaps/hallstatt4_hd.exr", app_data.envmap->envmap);
+    lt::load_texture_exr(exec_path +"./../../data/envmaps/hallstatt4_hd.exr", app_data.envmap->envmap);
     app_data.envmap->init();
     app_data.rt.texture = &app_data.envmap->envmap;
     app_data.rt.initialize();
@@ -146,8 +146,15 @@ static void AppLayout(GLFWwindow* window, AppData& app_data)
 
 
 // Main code
-int main(int, char**)
+int main(int argc, char* argv[])
 {
+    std::filesystem::path executable_path(argv[0]);
+    std::filesystem::path current_path = std::filesystem::current_path();
+    exec_path = std::filesystem::relative(executable_path, current_path).remove_filename().generic_string();
+
+    lt::State::log_level = lt::logNoLabel;
+    lt::State::exectuable_path = exec_path;
+
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
@@ -173,7 +180,7 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-    io.Fonts->AddFontFromFileTTF("../../../3rd_party/Roboto-Regular.ttf", 15.);
+    io.Fonts->AddFontFromFileTTF( (exec_path + "./../../3rd_party/Cascadia.ttf").c_str(), 17.);
     
     ImGui::StyleColorsDark();
     

@@ -18,6 +18,8 @@
 
 #include <lil_tracer_theme.h>
 
+std::string exec_path;
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
@@ -236,7 +238,7 @@ void AppInit(AppData& app_data) {
     app_data.rsen_dir_light.type = RenderSensor::Type::Spectrum;
     app_data.scn_dir_light.geometries[0]->brdf = app_data.brdfs[app_data.current_brdf_idx];
 
-    lt::generate_from_path("../../../data/lte-orb/lte-orb.json", app_data.scn_glo_ill, app_data.ren_glo_ill);
+    lt::generate_from_path(exec_path + "../../data/lte-orb/lte-orb.json", app_data.scn_glo_ill, app_data.ren_glo_ill);
     app_data.rsen_glo_ill.sensor = app_data.ren_glo_ill.sensor;
     app_data.rsen_glo_ill.initialize();
     app_data.rsen_glo_ill.type = RenderSensor::Type::Spectrum;
@@ -271,8 +273,6 @@ void AppInit(AppData& app_data) {
     app_data.rs_brdf_sampling_diff.sensor = app_data.s_brdf_sampling_diff;
     app_data.rs_brdf_sampling_diff.initialize();
     app_data.rs_brdf_sampling_diff.type = RenderSensor::Type::Colormap;
-
-
 
 }
 
@@ -382,24 +382,6 @@ static void draw_param_gui(const std::shared_ptr<lt::Brdf>& brdf,std::string pre
             break;
         case lt::Params::Type::IOR:
             NEED_RESET(ImGui::DragFloat3(param_name.c_str(), (float*)brdf->params.ptrs[i], 0.01, 0.5, 10.));
-            break;
-        case lt::Params::Type::SH:
-            if (ImGui::BeginTable("table", 2, ImGuiTableFlags_Borders))
-            {
-                std::vector<float>* sh = (std::vector<float>*)brdf->params.ptrs[i];
-                ImGui::TableSetupColumn("num");
-                ImGui::TableSetupColumn("val");
-                ImGui::TableHeadersRow();
-
-                for (int j = 0; j < sh->size(); j++) {
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%d", j);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%f", sh->at(j));
-                }
-
-                ImGui::EndTable();
-            }
             break;
         case lt::Params::Type::BRDF:
             ImGui::Separator();
@@ -840,9 +822,14 @@ static void AppLayout(GLFWwindow* window, AppData& app_data)
 
 
 // Main code
-int main(int, char**)
+int main(int argc, char* argv[])
 {   
-    lt::Log::level = lt::logNoLabel;
+    std::filesystem::path executable_path(argv[0]);
+    std::filesystem::path current_path = std::filesystem::current_path();
+    exec_path = std::filesystem::relative(executable_path, current_path).remove_filename().generic_string();
+
+    lt::State::log_level = lt::logNoLabel;
+    lt::State::exectuable_path = exec_path;
 
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -878,10 +865,9 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-    io.Fonts->AddFontFromFileTTF("../../../3rd_party/Roboto-Regular.ttf", 15.);
+    io.Fonts->AddFontFromFileTTF( (exec_path + "./../../3rd_party/Cascadia.ttf").c_str(), 17.);
 
     //ImGui::StyleColorsDark();
-
     lil_tracer_theme();
 
     // Setup Platform/Renderer backends

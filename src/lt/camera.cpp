@@ -7,6 +7,7 @@ Factory<Camera>::CreatorRegistry& Factory<Camera>::registry()
 {
     static Factory<Camera>::CreatorRegistry registry {
         { "PerspectiveCamera", std::make_shared<PerspectiveCamera> }
+       ,{ "GonioCamera", std::make_shared<GonioCamera> }
     };
     return registry;
 }
@@ -30,6 +31,21 @@ Ray PerspectiveCamera::generate_ray(Float u, Float v)
     d = glm::normalize(d);
 
     return Ray(pos, d);
+}
+
+
+
+
+void GonioCamera::init()
+{
+    dir = -vec3(std::cos(phi) * std::sin(theta), std::cos(theta), std::sin(phi) * std::sin(theta));
+}
+
+
+Ray GonioCamera::generate_ray(Float u, Float v)
+{
+    vec3 pos = center + size * vec3(u, 0, v);
+    return Ray(pos - dir * offset, dir);
 }
 
 

@@ -34,16 +34,20 @@ enum LogType {
     , logError
 };
 
+struct State {
+    static std::string exectuable_path;
+    static LogType log_level; 
+};
+
 class Log
 {
 private:
     bool show;
     std::stringstream s;
 public:
-    static LogType level;
     Log() : show(false) {}
     Log(LogType type) : show(false) {
-        show = type >= level;
+        show = type >= State::log_level;
         switch (type) {
         case logDebug:
             s << "\033[34m[LT - Debug] ";

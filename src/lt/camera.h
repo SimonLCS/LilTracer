@@ -95,4 +95,66 @@ protected:
     }
 };
 
+
+
+/**
+ * @brief Class representing a Gonio camera.
+ */
+class GonioCamera : public Camera {
+public:
+    /**
+     * @brief Default constructor for PerspectiveCamera.
+     * Initializes the camera type and default parameters.
+     */
+    GonioCamera()
+        : Camera("GonioCamera")
+        , theta(0.)
+        , phi(0.)
+        , center(vec3(0))
+        , offset(100.)
+        , dir(vec3(0.,-1.,0.))
+    {
+        link_params();
+    }
+
+    /**
+     * @brief Initialize the perspective camera.
+     * Computes view and projection matrices.
+     */
+    void init();
+
+
+    /**
+     * @brief Generate a ray from the gonio camera.
+     * @param u The horizontal coordinate of the point on the image plane
+     * (normalized between -1 and 1).
+     * @param v The vertical coordinate of the point on the image plane
+     * (normalized between -1 and 1).
+     * @return The generated ray.
+     */
+    Ray generate_ray(Float u, Float v);
+
+    float theta ; /**< Camera zenith angle. */
+    float phi   ; /**< Camera azimuth angle. */
+    vec3  center; /**< Surface (quad) position. */
+    float size  ; /**< Surface (quad) size */
+    float offset; /**< Ray offset to get a ray starting out of the surface*/
+    vec3 dir    ; /**< Ray direction computed from theta and phi*/
+protected:
+    /**
+     * @brief Link parameters with the Params struct.
+     */
+    void link_params()
+    {
+        params.add("theta", Params::Type::FLOAT, &theta);
+        params.add("phi", Params::Type::FLOAT, &phi);
+        params.add("center", Params::Type::VEC3, &center);
+        params.add("size", Params::Type::FLOAT, &size);
+        params.add("offset", Params::Type::FLOAT, &offset);
+    }
+};
+
+
+
+
 } // namespace LT_NAMESPACE

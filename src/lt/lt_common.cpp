@@ -1,7 +1,8 @@
 #include "lt_common.h"
 
 namespace LT_NAMESPACE {
-
-	LogType Log::level = LogType::logError;
+	
+	std::string State::exectuable_path = "";
+	LogType State::log_level = LogType::logError;
 
 } // namespace LT_NAMESPACE

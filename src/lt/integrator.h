@@ -63,40 +63,16 @@ public:
 #endif
 #if 1
         int block_size = 16;
-        //std::cout << "in" << std::endl;
-#pragma omp parallel for collapse(2) schedule(dynamic)
+        #pragma omp parallel for collapse(2) schedule(dynamic)
         for (int h = 0; h < sensor->h / block_size + 1; h++)
             for (int w = 0; w < sensor->w / block_size + 1; w++) {
                 Sampler s;
-                //s.seed(n_sample);
                 s.seed((h + w * (block_size + 1) + 1) * n_sample);
                 render_block(h, w, block_size, camera, sensor, scene, sampler);
             }
 
 #endif
-        //std::cout << "out" << std::endl;
-
-#if 0
-			int block_size = 16;
-			int h_num_block = sensor->h / block_size + 1;
-			int w_num_block = sensor->w / block_size + 1;
-			
-			tbb::task_group tg;
-			
-			for (int h = 0; h < sensor->h / block_size + 1; h++)
-				for (int w = 0; w < sensor->w / block_size + 1; w++) {
-					tg.run([&] {
-						Sampler s;// (sampler);
-						s.seed(h + w * (block_size + 1));
-						render_block(h, w, block_size, camera, sensor, scene, s);
-					});
-				}
-			tg.wait();
-			tbb::missing_wait();
-#endif
-
         n_sample++;
-
         auto t2 = std::chrono::high_resolution_clock::now();
         float delta_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
         return delta_time;
@@ -523,39 +499,86 @@ protected:
 /**
  * @brief Direct lighting integrator class.
  */
-class ReSTIRIntegrator : public Integrator {
+class GonioIntegrator : public Integrator {
 public:
-    ReSTIRIntegrator()
-        : Integrator("ReSTIRIntegrator")
+    GonioIntegrator()
+        : Integrator("GonioIntegrator"),
+        max_depth(10)
     {
         link_params();
     };
 
-    Spectrum render_pixel(Ray& r, Scene& scene, Sampler& sampler)
+    float render(std::shared_ptr<Camera> camera, std::shared_ptr<Sensor> sensor,
+        Scene& scene, Sampler& sampler)
     {
-        SurfaceInteraction si;
+        auto t1 = std::chrono::high_resolution_clock::now();
 
-        Spectrum s(0.);
+        int block_size = 16;
+#pragma omp parallel for collapse(2) schedule(dynamic)
+        for (int h = 0; h < sensor->h / block_size + 1; h++)
+            for (int w = 0; w < sensor->w / block_size + 1; w++) {
+                Sampler s;
+                s.seed((h + w * (block_size + 1) + 1) * n_sample);
 
-        if (scene.intersect(r, si)) {
-            if (!si.brdf) {
-                r = Ray(si.pos + r.d * 0.00001f, r.d);
-                return render_pixel(r, scene, sampler);
+                float u = sampler.next_float();
+                float v = sampler.next_float();
+
+                Ray r = camera->generate_ray( u, v);
+                
+
+
+                Spectrum throughput(1.);
+                
+                for (int d = 0; d < max_depth; d++) {
+
+                    SurfaceInteraction si;
+                    if (scene.intersect(r, si)) {
+
+
+                        if (!si.brdf) {
+                            r = Ray(si.pos + r.d * 0.00001f, r.d);
+                            d--;
+                            continue;
+                        }
+
+                        // Compute BRDF  contrib
+                        vec3 wi = si.to_local(-r.d);
+                        Brdf::Sample bs = si.brdf->sample(wi, sampler);
+
+                        if (bs.wo.z < 0.0001 || wi.z < 0.0001)
+                            break;
+
+                        Float wo_pdf = si.brdf->pdf(wi, bs.wo);
+                        Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, sampler);
+                        throughput *= brdf_cos_weighted / wo_pdf;
+                        assert(throughput == throughput);
+
+                        // offset si.pos for next bounce
+                        vec3 p = si.pos - r.d * 0.00001f;
+                        r = Ray(p, si.to_world(bs.wo));
+
+                    }
+                    else {
+                        break;
+                    }
+                }
+
+                int x = int(float(sensor->w) * (std::atan2f(r.d.x, r.d.z) / (2.*pi) + 0.5));
+                int y = int(float(sensor->h) * std::acosf(r.d.y) / pi);
+
+                sensor->add(x, y, throughput);
+
             }
 
-            if (si.brdf->is_emissive())
-                return si.brdf->emission();
+        n_sample++;
+        auto t2 = std::chrono::high_resolution_clock::now();
+        float delta_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        return delta_time;
+    };
 
-            s += uniform_sample_one_light(r, si, scene, sampler);
-        }
-        else {
-            for (const auto& light : scene.infinite_lights)
-                s += light->eval(r.d);
-        }
+    Spectrum render_pixel(Ray& r, Scene& scene, Sampler& sampler) { return Spectrum(0.); };
 
-        return s;
-    }
-
+    uint32_t max_depth; /**< Maximum depth of path tracing. */
 protected:
     void link_params() { }
 };
