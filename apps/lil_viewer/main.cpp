@@ -246,8 +246,7 @@ void update_opengl_scene(std::shared_ptr<RenderableScene> r, int scn_idx) {
 }
 
 void draw_opengl_scene() {
-    //opengl_scene.dist = ImGui::GetIO().MouseWheel;
-    //opengl_scene.pos = ImGui::GetMouseDragDelta();
+    
     glm::vec3 center = opengl_scene.pos + opengl_scene.dir * opengl_scene.dist;
 
     // Zoom
@@ -416,8 +415,6 @@ void render_polar_bg(const lt::vec3 wi) {
 }
 
 void brdf_slice(std::shared_ptr<lt::Brdf> brdf, float th_i, float ph_i, std::shared_ptr<lt::Sensor> sensor, lt::Sampler& sampler) {
-
-#if 1
     std::vector<float> th = lt::linspace<float>(0, 0.5 * lt::pi, sensor->h);
     std::vector<float> ph = lt::linspace<float>(0, 2. * lt::pi, sensor->w);
 
@@ -428,36 +425,6 @@ void brdf_slice(std::shared_ptr<lt::Brdf> brdf, float th_i, float ph_i, std::sha
             sensor->value[y * sensor->w + x] = brdf->eval(wi, wo, sampler);
         }
     }
-#endif
-#if 0
-    std::vector<float> th_d = lt::linspace<float>(0.5 * lt::pi, 0., sensor->h);
-    std::vector<float> th_h = lt::linspace<float>(0, 0.5 * lt::pi, sensor->w);
-    float ph = ph_i;
-
-    for (int x = 0; x < sensor->w; x++) {
-        for (int y = 0; y < sensor->h; y++) {
-
-            float sin_th_d = std::sin(th_d[y]);
-            float cos_th_d = std::cos(th_d[y]);
-
-            float sin_th_h = std::sin(th_h[x]);
-            float cos_th_h = std::cos(th_h[x]);
-
-            float sin_ph = std::sin(ph);
-            float cos_ph = std::cos(ph);
-
-            lt::vec3 wd = lt::polar_to_card(th_d[y], 0);
-            lt::vec3 wi = lt::vec3(cos_th_h * wd.x + sin_th_h * wd.z, 0., -sin_th_h * wd.x + cos_th_h * wd.z);
-            wi = lt::vec3(cos_ph * wi.x + sin_ph * wi.y, -sin_ph * wi.x + cos_ph * wi.y, wi.z);
-
-            lt::vec3 wh = lt::polar_to_card(th_h[x], 0.);
-
-            lt::vec3 wo = glm::reflect(-wi, wh);
-
-            sensor->value[y * sensor->w + x] = glm::pow(brdf->eval(wi, wo), lt::vec3(0.4545));
-        }
-    }
-#endif
 }
 
 template<typename T>
@@ -931,6 +898,7 @@ static void app_scene(AppData& app_data, bool& open) {
 
 static void app_layout(glm::ivec4& win_frame, AppData& app_data, bool& open)
 {
+    ImGui::SetNextWindowPos(ImVec2(0,0));
     ImGui::SetNextWindowSize(ImVec2(win_frame.x, win_frame.y));
 
     if (need_reset) {
@@ -991,8 +959,6 @@ GLFWwindow* init() {
     const char* glsl_version = "#version 330";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    //glfwWindowHint(GLFW_DECORATED, 0);
-    //glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
     // Create window with graphics context
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Lil Viewer", nullptr, nullptr);
@@ -1020,7 +986,6 @@ GLFWwindow* init() {
 
     io.Fonts->AddFontFromFileTTF((exec_path + "./../../3rd_party/Cascadia.ttf").c_str(), 17.);
 
-    //ImGui::StyleColorsDark();
     lil_tracer_theme();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -1079,7 +1044,6 @@ int main(int argc, char* argv[])
     app_data.init();
     opengl_scene.init();
     
-    //static auto drop_binding = [&](GLFWwindow* window, int path_count, const char* paths[]) { drop_callback( app_data, window, path_count, paths); };
     glfwSetDropCallback(window, drop_callback);
     
     bool open = true;

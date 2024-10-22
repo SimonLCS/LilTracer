@@ -497,7 +497,7 @@ protected:
 
 
 /**
- * @brief Direct lighting integrator class.
+ * @brief Gonio integrator class.
  */
 class GonioIntegrator : public Integrator {
 public:
@@ -514,7 +514,7 @@ public:
         auto t1 = std::chrono::high_resolution_clock::now();
 
         int block_size = 16;
-#pragma omp parallel for collapse(2) schedule(dynamic)
+        //#pragma omp parallel for collapse(2) schedule(dynamic)
         for (int h = 0; h < sensor->h / block_size + 1; h++)
             for (int w = 0; w < sensor->w / block_size + 1; w++) {
                 Sampler s;
@@ -580,7 +580,10 @@ public:
 
     uint32_t max_depth; /**< Maximum depth of path tracing. */
 protected:
-    void link_params() { }
+    void link_params() { 
+        params.add("max_depth", lt::Params::Type::INT, &max_depth);
+        
+    }
 };
 
 
