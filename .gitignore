@@ -1,2 +1,6 @@
 build/*
 data/*
+bin/*
+*.exr
+!./data/envmaps/*.exr
+*.csv
