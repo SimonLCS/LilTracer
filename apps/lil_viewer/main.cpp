@@ -29,6 +29,8 @@ static void glfw_error_callback(int error, const char* description)
 
 static bool need_reset;
 #define NEED_RESET(x) if(x){ need_reset = true; }
+#define IF_CHANGED(x) if(x){ need_reset = true; obj->on_changes();}
+
 
 struct RenderSensor {
 
@@ -200,26 +202,55 @@ struct RenderableScene {
     std::string path;
 };
 
-static OpenglScene opengl_scene;
+static lt::gl::Scene opengl_scene;
 
-void update_opengl_scene(std::shared_ptr<RenderableScene> r, int scn_idx) {
-    if (scn_idx == opengl_scene.idx) {
-        return;
-    }
+std::vector<std::shared_ptr<lt::gl::Line>> add_camera_mesh(std::shared_ptr<lt::Camera> camera) {
+    lt::Ray ll = camera->generate_ray(-1., -1.);
+    lt::Ray lr = camera->generate_ray(1., -1.);
+    lt::Ray tl = camera->generate_ray(-1., 1.);
+    lt::Ray tr = camera->generate_ray(1., 1.);
+
+    std::vector<std::shared_ptr<lt::gl::Line>> lines;
+
+    std::vector<glm::vec3> line = {};
+    // Camera frame
+    line.push_back(ll.o + ll.d * 0.1f);
+    line.push_back(lr.o + lr.d * 0.1f);
+    line.push_back(tr.o + tr.d * 0.1f);
+    line.push_back(tl.o + tl.d * 0.1f);
+    lines.push_back(std::make_shared<lt::gl::Line>(line, GL_LINE_LOOP));
+    
+    // Camera direction
+    line = { ll.o, ll.o + ll.d };
+    lines.push_back(std::make_shared<lt::gl::Line>(line, GL_LINES));
+    line = { lr.o, lr.o + lr.d };
+    lines.push_back(std::make_shared<lt::gl::Line>(line, GL_LINES));
+    line = { tl.o, tl.o + tl.d };
+    lines.push_back(std::make_shared<lt::gl::Line>(line, GL_LINES));
+    line = { tr.o, tr.o + tr.d };
+    lines.push_back(std::make_shared<lt::gl::Line>(line, GL_LINES));
+
+    return lines;
+}
+
+void new_opengl_scene(std::shared_ptr<RenderableScene> r, int scn_idx) {
+
     opengl_scene.meshes.clear();
+    opengl_scene.lines.clear();
     opengl_scene.idx = scn_idx;
 
+    std::vector<lt::gl::vertex> vertices;
+    std::vector<unsigned int> indices;
     for (std::shared_ptr<lt::Geometry> g : r->scn.geometries) {
-        std::vector<Vertex> vertices;
-        std::vector<unsigned int> indices;
+        vertices.clear();
+        indices.clear();
         GLuint render_mode = GL_TRIANGLES;
         if (g->type == "Mesh") {
             std::shared_ptr<lt::Mesh> m = std::reinterpret_pointer_cast<lt::Mesh>(g);
             vertices.resize(m->vertex.size());
             indices.resize(m->triangle_indices.size() * 3);
             for (int i = 0; i < m->vertex.size(); i++) {
-                vertices[i].Position = m->vertex[i];
-                vertices[i].Normal = m->normal[i];
+                vertices[i] = { m->vertex[i] , m->normal[i] };
             }
             for (int i = 0; i < m->triangle_indices.size(); i++) {
                 indices[3*i]     = m->triangle_indices[i].x;
@@ -230,56 +261,41 @@ void update_opengl_scene(std::shared_ptr<RenderableScene> r, int scn_idx) {
         }
         else if (g->type == "Sphere") {
             std::shared_ptr<lt::Sphere> s = std::reinterpret_pointer_cast<lt::Sphere>(g);;
-            solid_sphere(vertices, indices, s->rad, 10, 10);
+            lt::gl::solid_sphere(vertices, indices, s->rad, 10, 10);
             render_mode = GL_TRIANGLE_STRIP;
         }
-        opengl_scene.meshes.push_back(std::make_shared<Mesh>(vertices, indices, render_mode));
+
+        opengl_scene.meshes.push_back(std::make_shared<lt::gl::Mesh>(vertices, indices, render_mode));
     }
+    // Add camera mesh
+    opengl_scene.lines = add_camera_mesh(r->ren.camera);
+
     lt::Ray start = r->ren.camera->generate_ray(0, 0);
     opengl_scene.setup();
-    opengl_scene.pos = start.o;
-    opengl_scene.dir = start.d;
-    opengl_scene.up = glm::vec3(0., -1., 0.);
-    opengl_scene.right = glm::normalize(glm::cross(opengl_scene.dir, opengl_scene.up));
-    opengl_scene.up = glm::normalize(glm::cross(opengl_scene.right, opengl_scene.dir));
-    opengl_scene.dist = 1.;
+    opengl_scene.cam = lt::gl::Camera3D(start.o - start.d, start.o, float(opengl_scene.res_x) / float(opengl_scene.res_y));
 }
 
-void draw_opengl_scene() {
-    
-    glm::vec3 center = opengl_scene.pos + opengl_scene.dir * opengl_scene.dist;
-
+void update_opengl_camera(){
     // Zoom
     float zoom_factor = ImGui::GetIO().MouseWheel * ImGui::GetIO().DeltaTime;
-    opengl_scene.dist = glm::max(0.01f, opengl_scene.dist-zoom_factor);
-    opengl_scene.pos = center - opengl_scene.dist * opengl_scene.dir;
+    opengl_scene.cam.zoom_to_pivot(zoom_factor);
 
     // Pan
     ImVec2 drag = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
     ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
     float pan_factorX = drag.x * ImGui::GetIO().DeltaTime * 0.1;
     float pan_factorY = -drag.y * ImGui::GetIO().DeltaTime * 0.1;
-    glm::vec3 panX = opengl_scene.right * pan_factorX;
-    glm::vec3 panY = opengl_scene.up * pan_factorY;
-    opengl_scene.pos += panX + panY;
-    center += panX + panY;
-    
+    opengl_scene.cam.translate_screen_space(pan_factorX, pan_factorY);
+
+
     drag = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
     ImGui::ResetMouseDragDelta(ImGuiMouseButton_Right);
     float angle_X_inc = drag.x * ImGui::GetIO().DeltaTime;
     float angle_Y_inc = drag.y * ImGui::GetIO().DeltaTime;
+    opengl_scene.cam.rotate_around_pivot_point(angle_X_inc, angle_Y_inc);
+}
 
-    glm::mat4 rot_mat_X = glm::rotate(glm::mat4(1.0f), glm::radians(angle_X_inc), opengl_scene.up);
-    opengl_scene.dir = glm::vec3(glm::vec4(opengl_scene.dir, 1.0f) * rot_mat_X);
-    opengl_scene.right = glm::vec3(glm::vec4(opengl_scene.right, 1.0f) * rot_mat_X);
-   
-    glm::mat4 rot_mat_Y = glm::rotate(glm::mat4(1.0f), glm::radians(angle_Y_inc), opengl_scene.right);
-    opengl_scene.dir = glm::vec3(glm::vec4(opengl_scene.dir, 1.0f) * rot_mat_Y);
-    opengl_scene.up = glm::vec3(glm::vec4(opengl_scene.up, 1.0f) * rot_mat_Y);
-
-    opengl_scene.pos = center - opengl_scene.dist * opengl_scene.dir;
-
-    opengl_scene.view = glm::lookAt(opengl_scene.pos, opengl_scene.pos + opengl_scene.dir * opengl_scene.dist, glm::vec3(0.,-1.,0.));
+void draw_opengl_scene() {
     opengl_scene.draw();
 }
 
@@ -330,8 +346,8 @@ struct AppData {
         scenes[1]->scn.geometries[3]->brdf = brdfs[current_brdf_idx];
         scenes[1]->path = "Global";
 
-        scn_idx = 1;
-        update_opengl_scene(scenes[scn_idx], scn_idx);
+        scn_idx = 0;
+        new_opengl_scene(scenes[scn_idx], scn_idx);
 
         s_brdf_slice = std::make_shared<lt::Sensor>(256, 64);
         s_brdf_slice->init();
@@ -369,7 +385,7 @@ static AppData app_data;
 
 void render_overlay(lt::RendererAsync& ren, const ImVec2& work_pos, bool& pause) {
     bool p_open = true;
-    ImGuiWindowFlags window_flags = 0;// ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    ImGuiWindowFlags window_flags = 0;
 
     ImGui::SetNextWindowPos(work_pos, ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.25f); // Transparent background
@@ -431,28 +447,32 @@ template<typename T>
 static void draw_param_gui(const std::shared_ptr<T>& obj,std::string prev="") {
 
     for (int i = 0; i < obj->params.count; i++) {
-        std::string param_name = obj->params.names[i] + "##" + prev ;
-        switch (obj->params.types[i])
+        lt::Param p = obj->params.list[i];
+        std::string param_name = p.name + "##" + prev ;
+        switch (p.type)
         {
-        case lt::Params::Type::BOOL:
-            NEED_RESET(ImGui::Checkbox(param_name.c_str(), (bool*)obj->params.ptrs[i]));
+        case lt::ParamType::BOOL:
+            IF_CHANGED(ImGui::Checkbox(param_name.c_str(), (bool*)p.ptr));
             break;
-        case lt::Params::Type::INT:
-            NEED_RESET(ImGui::DragInt(param_name.c_str(), (int*)obj->params.ptrs[i], 0, 1, 12));
+        case lt::ParamType::INT:
+            IF_CHANGED(ImGui::DragInt(param_name.c_str(), (int*)p.ptr, 0, 1, 12));
             break;
-        case lt::Params::Type::FLOAT:
-            NEED_RESET(ImGui::DragFloat(param_name.c_str(), (float*)obj->params.ptrs[i], 0.01, 0.001, 3.));
+        case lt::ParamType::FLOAT:
+            IF_CHANGED(ImGui::DragFloat(param_name.c_str(), (float*)p.ptr, 0.01, 0.001, 3.));
             break;
-        case lt::Params::Type::VEC3:
-            NEED_RESET(ImGui::ColorEdit3(param_name.c_str(), (float*)obj->params.ptrs[i]));
+        case lt::ParamType::VEC3:
+            IF_CHANGED(ImGui::DragFloat3(param_name.c_str(), (float*)p.ptr));
             break;
-        case lt::Params::Type::IOR:
-            NEED_RESET(ImGui::DragFloat3(param_name.c_str(), (float*)obj->params.ptrs[i], 0.01, 0.5, 10.));
+        case lt::ParamType::RGB:
+            IF_CHANGED(ImGui::ColorEdit3(param_name.c_str(), (float*)p.ptr));
             break;
-        case lt::Params::Type::BRDF:
+        case lt::ParamType::IOR:
+            IF_CHANGED(ImGui::DragFloat3(param_name.c_str(), (float*)p.ptr, 0.01, 0.5, 10.));
+            break;
+        case lt::ParamType::BRDF:
             ImGui::Separator();
-            ImGui::Text(obj->params.names[i].c_str());
-            draw_param_gui(*((std::shared_ptr<lt::Brdf>*)obj->params.ptrs[i]),param_name);
+            ImGui::Text(p.name.c_str());
+            draw_param_gui(*((std::shared_ptr<lt::Brdf>*)p.ptr),param_name);
             ImGui::Separator();
             break;
         default:
@@ -754,10 +774,19 @@ static void tab_scene_render( int scn_idx, AppData& app_data, bool& open, bool u
         return;
 
     std::shared_ptr<RenderableScene> r = app_data.scenes[scn_idx];
-    update_opengl_scene(r,scn_idx);
-    draw_opengl_scene();
+    
+    if (scn_idx != opengl_scene.idx) {
+        new_opengl_scene(r, scn_idx);
+    }
+
     if (ImPlot::BeginPlot("##image", "", "", ImVec2(-1, -1), ImPlotFlags_Equal | ImPlotFlags_NoFrame, ImPlotAxisFlags_AutoFit| ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoDecorations)) {
-        ImPlot::PlotImage("", (ImTextureID)opengl_scene.tex_id, ImVec2(0, 0), ImVec2(opengl_scene.res_x, opengl_scene.res_y));
+        
+        if (ImGui::IsAnyItemHovered() && ImGui::IsItemFocused()) {
+            update_opengl_camera();
+        }
+        draw_opengl_scene();
+        
+        ImPlot::PlotImage("", (ImTextureID)opengl_scene.tex.id, ImVec2(0, 0), ImVec2(opengl_scene.res_x, opengl_scene.res_y));
         ImPlot::EndPlot();
     }
 
@@ -769,9 +798,10 @@ static void tab_scene_render( int scn_idx, AppData& app_data, bool& open, bool u
 
 static void tab_scene_left_panel(AppData& app_data, bool& open) {
 
-    ImGui::BeginChild("top pane", ImVec2(250, ImGui::GetContentRegionAvail().y * 1.), true);
-
     std::shared_ptr<RenderableScene> r = app_data.scenes[app_data.scn_idx];
+
+    ImGui::BeginChild("top integrator pane", ImVec2(250, ImGui::GetContentRegionAvail().y * 0.5), true);
+
     const std::vector<std::string>& intergrator_names = lt::Factory<lt::Integrator>::names();
 
     if (ImGui::Button(r->ren.integrator->type.c_str(), ImVec2(235, 25)))
@@ -790,6 +820,33 @@ static void tab_scene_left_panel(AppData& app_data, bool& open) {
     draw_param_gui(r->ren.integrator);
 
     ImGui::EndChild();
+
+
+    ImGui::BeginChild("bottom camera pane", ImVec2(250, ImGui::GetContentRegionAvail().y * 1.), true);
+
+    const std::vector<std::string>& camera_names = lt::Factory<lt::Camera>::names();
+
+    if (ImGui::Button(r->ren.camera->type.c_str(), ImVec2(235, 25)))
+        ImGui::OpenPopup("camera_popup");
+
+    if (ImGui::BeginPopup("camera_popup"))
+    {
+        for (int i = 0; i < camera_names.size(); i++)
+            if (ImGui::Selectable(camera_names[i].c_str()))
+                r->ren.camera = lt::Factory<lt::Camera>::create(camera_names[i]);
+        ImGui::EndPopup();
+        NEED_RESET(true);
+    }
+
+    ImGui::Separator();
+    draw_param_gui(r->ren.camera);
+    if (need_reset) {
+        opengl_scene.lines = add_camera_mesh(r->ren.camera);
+        opengl_scene.setup_lines();
+    }
+
+    ImGui::EndChild();
+
 
 }
 
@@ -885,7 +942,7 @@ static void app_scene(AppData& app_data, bool& open) {
 
         ImGui::EndTabBar();
     }
-
+    app_data.scn_idx = tab;
     ImGui::BeginGroup();
     tab_scene_left_panel(app_data, open);
     ImGui::EndGroup();
@@ -902,8 +959,8 @@ static void app_layout(glm::ivec4& win_frame, AppData& app_data, bool& open)
     ImGui::SetNextWindowSize(ImVec2(win_frame.x, win_frame.y));
 
     if (need_reset) {
-        app_data.scenes[0]->ren.reset();
-        app_data.scenes[1]->ren.reset();
+        for(std::shared_ptr<RenderableScene>& r : app_data.scenes)
+            r->ren.reset();
         app_data.s_brdf_sampling->reset();
         app_data.s_brdf_sampling_pdf->reset();
         app_data.s_brdf_sampling_diff->reset();
@@ -938,16 +995,19 @@ static void app_layout(glm::ivec4& win_frame, AppData& app_data, bool& open)
 
 void drop_callback(GLFWwindow* window, int count, const char** paths)
 {
-    int i;
-    for (i = 0; i < count; i++){
-        app_data.scenes.push_back(std::make_shared<RenderableScene>());
-        std::shared_ptr<RenderableScene> r = app_data.scenes[app_data.scenes.size() - 1];   
-        lt::generate_from_path(paths[i], r->scn, r->ren);
-        r->rsen.sensor = r->ren.sensor;
-        r->rsen.initialize();
-        r->rsen.type = RenderSensor::Type::Spectrum;
-        r->path = paths[i];
-        std::cout << paths[i] << std::endl;
+    // Add scenes from paths
+    for (int i = 0; i < count; i++){
+        const char* path = paths[i];
+        
+        std::shared_ptr<RenderableScene> r = std::make_shared<RenderableScene>();
+        
+        if (lt::generate_from_path(path, r->scn, r->ren)) {
+            app_data.scenes.push_back(r);
+            r->rsen.sensor = r->ren.sensor;
+            r->rsen.initialize();
+            r->rsen.type = RenderSensor::Type::Spectrum;
+            r->path = path;
+        }
     }
 }
 
@@ -1050,7 +1110,6 @@ int main(int argc, char* argv[])
     glm::ivec4 win_frame{};
     while (!glfwWindowShouldClose(window) && open)
     {
-
         new_frame(window, win_frame);
 
         //ImGui::ShowDemoWindow();
@@ -1063,7 +1122,6 @@ int main(int argc, char* argv[])
     }
 
     terminate(window);
-
 
     return 0;
 }

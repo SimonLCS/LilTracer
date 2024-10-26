@@ -16,6 +16,16 @@
 
 namespace LT_NAMESPACE {
 
+// struct RendererDesc {
+//     std::shared_ptr<Sampler> sampler = nullptr;
+//     std::shared_ptr<Sensor> sensor = nullptr;
+//     std::shared_ptr<Camera> camera = nullptr;
+//     std::shared_ptr<Integrator> Integrator = nullptr;
+//     bool async = false;
+//     int max_render_pass = 1;
+// };
+
+
 /**
  * @brief Class for managing rendering process.
  */

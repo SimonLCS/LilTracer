@@ -115,8 +115,8 @@ namespace LT_NAMESPACE {
          */
         void link_params()
         {
-            params.add("dir", Params::Type::VEC3, &dir);
-            params.add("intensity", Params::Type::FLOAT, &intensity);
+            params.add("dir", ParamType::VEC3, &dir);
+            params.add("intensity", ParamType::FLOAT, &intensity);
         }
     };
 
@@ -154,8 +154,8 @@ namespace LT_NAMESPACE {
     protected:
         void link_params()
         {
-            params.add("texture", Params::Type::TEXTURE, &envmap);
-            params.add("intensity", Params::Type::FLOAT, &intensity);
+            params.add("texture", ParamType::TEXTURE, &envmap);
+            params.add("intensity", ParamType::FLOAT, &intensity);
         }
 
     };

@@ -41,7 +41,7 @@ public:
      * @param sampler The sampler used for sampling.
      * @return The time taken in milliseconds.
      */
-    float render(std::shared_ptr<Camera> camera, std::shared_ptr<Sensor> sensor,
+    virtual float render(std::shared_ptr<Camera> camera, std::shared_ptr<Sensor> sensor,
         Scene& scene, Sampler& sampler)
     {
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -83,7 +83,7 @@ public:
      * @param id_h The ID of the block in the vertical direction.
      * @param id_w The ID of the block in the horizontal direction.
      * @param block_size The size of the block.
-     * @param camera The camera used for rendering.
+     * @param camera The camera used for rendering.up
      * @param sensor The sensor to capture the rendered image.
      * @param scene The scene to render.
      * @param sampler The sampler used for sampling.
@@ -330,7 +330,7 @@ public:
 
 protected:
     void link_params() { 
-        params.add("max_depth", lt::Params::Type::INT, &max_depth);
+        params.add("max_depth", lt::ParamType::INT, &max_depth);
     }
 };
 
@@ -374,7 +374,7 @@ public:
 
 protected:
     void link_params() {
-        params.add("sample_all_lights", lt::Params::Type::BOOL, &sample_all_lights);
+        params.add("sample_all_lights", ParamType::BOOL, &sample_all_lights);
     }
 };
 
@@ -450,7 +450,7 @@ public:
 protected:
     void link_params() 
     { 
-        params.add("max_depth", Params::Type::INT, &max_depth);
+        params.add("max_depth", ParamType::INT, &max_depth);
     }
 };
 
@@ -581,7 +581,7 @@ public:
     uint32_t max_depth; /**< Maximum depth of path tracing. */
 protected:
     void link_params() { 
-        params.add("max_depth", lt::Params::Type::INT, &max_depth);
+        params.add("max_depth", ParamType::INT, &max_depth);
         
     }
 };

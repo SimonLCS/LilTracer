@@ -36,9 +36,9 @@ public:
 protected:
     void link_params()
     {
-        params.add("float", Params::Type::FLOAT, &v1);
-        params.add("vec3", Params::Type::VEC3, &v2);
-        params.add("array", Params::Type::SH, &v3);
+        params.add("float", ParamType::FLOAT, &v1);
+        params.add("vec3", ParamType::VEC3, &v2);
+        params.add("array", ParamType::SH, &v3);
     }
 };
 

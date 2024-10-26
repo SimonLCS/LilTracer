@@ -113,15 +113,15 @@ namespace LT_NAMESPACE {
     protected:
         void link_params()
         {
-            params.add("rough_x", Params::Type::FLOAT, &scale[0]);
-            params.add("rough_y", Params::Type::FLOAT, &scale[1]);
-            params.add("tau", Params::Type::FLOAT, &(ms.tau_0));
-            params.add("eta", Params::Type::IOR, &eta);
-            params.add("kappa", Params::Type::IOR, &kappa);
-            params.add("height_and_direction", Params::Type::BOOL, &(ms.height_and_direction));
-            params.add("use_smith", Params::Type::BOOL, &(ms.use_smith));
-            params.add("sig_asia_2023", Params::Type::BOOL, &(ms.sig_asia_2023));
-            params.add("base", Params::Type::BRDF, &base);
+            params.add("rough_x", ParamType::FLOAT, &scale[0]);
+            params.add("rough_y", ParamType::FLOAT, &scale[1]);
+            params.add("tau", ParamType::FLOAT, &(ms.tau_0));
+            params.add("eta", ParamType::IOR, &eta);
+            params.add("kappa", ParamType::IOR, &kappa);
+            params.add("height_and_direction", ParamType::BOOL, &(ms.height_and_direction));
+            params.add("use_smith", ParamType::BOOL, &(ms.use_smith));
+            params.add("sig_asia_2023", ParamType::BOOL, &(ms.sig_asia_2023));
+            params.add("base", ParamType::BRDF, &base);
         }
         
     };
@@ -181,12 +181,12 @@ namespace LT_NAMESPACE {
     protected:
         void link_params()
         {
-            params.add("rough_x", Params::Type::FLOAT, &scale[0]);
-            params.add("rough_y", Params::Type::FLOAT, &scale[1]);
-            params.add("tau", Params::Type::FLOAT, &(ms.tau_0));
-            params.add("albedo", Params::Type::VEC3, &albedo);
-            params.add("use_smith", Params::Type::BOOL, &(ms.use_smith));
-            params.add("base", Params::Type::BRDF, &base);
+            params.add("rough_x", ParamType::FLOAT, &scale[0]);
+            params.add("rough_y", ParamType::FLOAT, &scale[1]);
+            params.add("tau", ParamType::FLOAT, &(ms.tau_0));
+            params.add("albedo", ParamType::RGB, &albedo);
+            params.add("use_smith", ParamType::BOOL, &(ms.use_smith));
+            params.add("base", ParamType::BRDF, &base);
         }
     };
 

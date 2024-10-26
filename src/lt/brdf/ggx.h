@@ -40,11 +40,11 @@ public:
 protected:
     void link_params()
     {
-        params.add("rough_x", Params::Type::FLOAT, &scale[0]);
-        params.add("rough_y", Params::Type::FLOAT, &scale[1]);
-        params.add("eta", Params::Type::IOR, &eta);
-        params.add("kappa", Params::Type::IOR, &kappa);
-        params.add("sample_visible_distribution", Params::Type::BOOL, &sample_visible_distribution);
+        params.add("rough_x", ParamType::FLOAT, &scale[0]);
+        params.add("rough_y", ParamType::FLOAT, &scale[1]);
+        params.add("eta", ParamType::IOR, &eta);
+        params.add("kappa", ParamType::IOR, &kappa);
+        params.add("sample_visible_distribution", ParamType::BOOL, &sample_visible_distribution);
     }
 };
 
@@ -97,11 +97,11 @@ public:
 protected:
     void link_params()
     {
-        params.add("rough_x", Params::Type::FLOAT, &scale[0]);
-        params.add("rough_y", Params::Type::FLOAT, &scale[1]);
-        params.add("eta", Params::Type::IOR, &eta);
-        params.add("kappa", Params::Type::IOR, &kappa);
-        params.add("sample_visible_distribution", Params::Type::BOOL, &sample_visible_distribution);
+        params.add("rough_x", ParamType::FLOAT, &scale[0]);
+        params.add("rough_y", ParamType::FLOAT, &scale[1]);
+        params.add("eta", ParamType::IOR, &eta);
+        params.add("kappa", ParamType::IOR, &kappa);
+        params.add("sample_visible_distribution", ParamType::BOOL, &sample_visible_distribution);
     }
 };
 
@@ -124,10 +124,10 @@ public:
 protected:
     void link_params()
     {
-        params.add("rough_x", Params::Type::FLOAT, &scale[0]);
-        params.add("rough_y", Params::Type::FLOAT, &scale[1]);
-        params.add("albedo", Params::Type::VEC3, &albedo);
-        params.add("sample_visible_distribution", Params::Type::BOOL, &sample_visible_distribution);
+        params.add("rough_x", ParamType::FLOAT, &scale[0]);
+        params.add("rough_y", ParamType::FLOAT, &scale[1]);
+        params.add("albedo", ParamType::RGB, &albedo);
+        params.add("sample_visible_distribution", ParamType::BOOL, &sample_visible_distribution);
     }
 };
 

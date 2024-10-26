@@ -31,7 +31,7 @@ public:
     float pdf(const vec3& wi, const vec3& wo);
 
 protected:
-    void link_params() { params.add("albedo", Params::Type::VEC3, &albedo); }
+    void link_params() { params.add("albedo", ParamType::RGB, &albedo); }
 };
 
 } // namespace LT_NAMESPACE

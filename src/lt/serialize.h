@@ -35,6 +35,11 @@ public:
      */
     virtual void init() {};
 
+    /**
+     * @brief Apply modification when parameters are changed.
+     */
+    virtual void on_changes() { init(); }
+
     int id; /**< Unique identifier for the serializable object. */
     Params params; /**< Parameters associated with the serializable object. */
     std::string type; /**< Type of the serializable object. */
@@ -45,6 +50,7 @@ protected:
      * the serializable object.
      */
     virtual void link_params() = 0;
+
 };
 
 } // namespace LT_NAMESPACE

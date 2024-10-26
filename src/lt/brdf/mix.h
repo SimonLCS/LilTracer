@@ -55,9 +55,9 @@ public:
 protected:
     void link_params() 
     { 
-        params.add("brdf1", Params::Type::BRDF, &brdf1);
-        params.add("brdf2", Params::Type::BRDF, &brdf2);
-        params.add("weight", Params::Type::FLOAT, &weight);
+        params.add("brdf1", ParamType::BRDF, &brdf1);
+        params.add("brdf2", ParamType::BRDF, &brdf2);
+        params.add("weight", ParamType::FLOAT, &weight);
     }
 };
 

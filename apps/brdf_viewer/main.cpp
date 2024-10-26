@@ -368,25 +368,26 @@ void brdf_slice(std::shared_ptr<lt::Brdf> brdf, float th_i, float ph_i, std::sha
 static void draw_param_gui(const std::shared_ptr<lt::Brdf>& brdf,std::string prev="") {
 
     for (int i = 0; i < brdf->params.count; i++) {
-        std::string param_name = brdf->params.names[i] + "##" + prev ;
-        switch (brdf->params.types[i])
+        lt::Param p = brdf->params.list[i];
+        std::string param_name = p.name + "##" + prev ;
+        switch (p.type)
         {
-        case lt::Params::Type::BOOL:
-            NEED_RESET(ImGui::Checkbox(param_name.c_str(), (bool*)brdf->params.ptrs[i]));
+        case lt::ParamType::BOOL:
+            NEED_RESET(ImGui::Checkbox(param_name.c_str(), (bool*)p.ptr));
             break;
-        case lt::Params::Type::FLOAT:
-            NEED_RESET(ImGui::DragFloat(param_name.c_str(), (float*)brdf->params.ptrs[i], 0.01, 0.001, 3.));
+        case lt::ParamType::FLOAT:
+            NEED_RESET(ImGui::DragFloat(param_name.c_str(), (float*)p.ptr, 0.01, 0.001, 3.));
             break;
-        case lt::Params::Type::VEC3:
-            NEED_RESET(ImGui::ColorEdit3(param_name.c_str(), (float*)brdf->params.ptrs[i]));
+        case lt::ParamType::VEC3:
+            NEED_RESET(ImGui::ColorEdit3(param_name.c_str(), (float*)p.ptr));
             break;
-        case lt::Params::Type::IOR:
-            NEED_RESET(ImGui::DragFloat3(param_name.c_str(), (float*)brdf->params.ptrs[i], 0.01, 0.5, 10.));
+        case lt::ParamType::IOR:
+            NEED_RESET(ImGui::DragFloat3(param_name.c_str(), (float*)p.ptr, 0.01, 0.5, 10.));
             break;
-        case lt::Params::Type::BRDF:
+        case lt::ParamType::BRDF:
             ImGui::Separator();
-            ImGui::Text(brdf->params.names[i].c_str());
-            draw_param_gui(*((std::shared_ptr<lt::Brdf>*)brdf->params.ptrs[i]),param_name);
+            ImGui::Text(p.name.c_str());
+            draw_param_gui(*((std::shared_ptr<lt::Brdf>*)p.ptr),param_name);
             ImGui::Separator();
             break;
         default:

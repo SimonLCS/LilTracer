@@ -34,8 +34,6 @@ Ray PerspectiveCamera::generate_ray(Float u, Float v)
 }
 
 
-
-
 void GonioCamera::init()
 {
     dir = -vec3(std::cos(phi) * std::sin(theta), std::cos(theta), std::sin(phi) * std::sin(theta));

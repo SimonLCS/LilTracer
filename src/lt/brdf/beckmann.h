@@ -39,10 +39,10 @@ public:
 protected:
     void link_params()
     {
-        params.add("rough_x", Params::Type::FLOAT, &scale[0]);
-        params.add("rough_y", Params::Type::FLOAT, &scale[1]);
-        params.add("eta", Params::Type::IOR, &eta);
-        params.add("kappa", Params::Type::IOR, &kappa);
+        params.add("rough_x", ParamType::FLOAT, &scale[0]);
+        params.add("rough_y", ParamType::FLOAT, &scale[1]);
+        params.add("eta", ParamType::IOR, &eta);
+        params.add("kappa", ParamType::IOR, &kappa);
     }
 };
 

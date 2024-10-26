@@ -26,7 +26,7 @@ public:
 protected:
     void link_params()
     {
-        params.add("intensity", Params::Type::VEC3, &intensity);
+        params.add("intensity", ParamType::RGB, &intensity);
     }
 };
 

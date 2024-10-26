@@ -88,11 +88,12 @@ protected:
      */
     void link_params()
     {
-        params.add("pos", Params::Type::VEC3, &pos);
-        params.add("center", Params::Type::VEC3, &center);
-        params.add("aspect", Params::Type::FLOAT, &aspect);
-        params.add("fov", Params::Type::FLOAT, &fov);
+        params.add("pos", ParamType::VEC3, &pos);
+        params.add("center", ParamType::VEC3, &center);
+        params.add("aspect", ParamType::FLOAT, &aspect);
+        params.add("fov", ParamType::FLOAT, &fov);
     }
+
 };
 
 
@@ -134,24 +135,25 @@ public:
      */
     Ray generate_ray(Float u, Float v);
 
-    float theta ; /**< Camera zenith angle. */
-    float phi   ; /**< Camera azimuth angle. */
-    vec3  center; /**< Surface (quad) position. */
-    float size  ; /**< Surface (quad) size */
-    float offset; /**< Ray offset to get a ray starting out of the surface*/
-    vec3 dir    ; /**< Ray direction computed from theta and phi*/
+    float theta = 0.f; /**< Camera zenith angle. */
+    float phi   = 0.f; /**< Camera azimuth angle. */
+    vec3  center= vec3(0.f); /**< Surface (quad) position. */
+    float size  = 1.f; /**< Surface (quad) size */
+    float offset= 100.f; /**< Ray offset to get a ray starting out of the surface*/
+    vec3 dir    = vec3(0.,-1.,0.); /**< Ray direction computed from theta and phi*/
 protected:
     /**
      * @brief Link parameters with the Params struct.
      */
     void link_params()
     {
-        params.add("theta", Params::Type::FLOAT, &theta);
-        params.add("phi", Params::Type::FLOAT, &phi);
-        params.add("center", Params::Type::VEC3, &center);
-        params.add("size", Params::Type::FLOAT, &size);
-        params.add("offset", Params::Type::FLOAT, &offset);
+        params.add("theta", ParamType::FLOAT, &theta);
+        params.add("phi", ParamType::FLOAT, &phi);
+        params.add("center", ParamType::VEC3, &center);
+        params.add("size", ParamType::FLOAT, &size);
+        params.add("offset", ParamType::FLOAT, &offset);
     }
+
 };
 
 

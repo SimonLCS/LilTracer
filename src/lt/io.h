@@ -55,6 +55,18 @@ static void json_set_vec3(const json& j, vec3* ptr)
 }
 
 /**
+ * @brief Set a rgb value from JSON.
+ * @param j The JSON value.
+ * @param ptr Pointer to the vec3 variable.
+ */
+static void json_set_rgb(const json& j, vec3* ptr)
+{
+    (*ptr)[0] = j[0];
+    (*ptr)[1] = j[1];
+    (*ptr)[2] = j[2];
+}
+
+/**
  * @brief Set a ior value from JSON.
  * @param j The JSON value.
  * @param ptr Pointer to the ior variable.
@@ -87,7 +99,12 @@ static void json_set_brdf(const json& j, std::shared_ptr<Brdf>* ptr,
     std::map<std::string, std::shared_ptr<Brdf>>& ref)
 {
     std::string brdf_name = j;
-    *ptr = ref[brdf_name];
+    try{
+        *ptr = ref.at(brdf_name);
+    }
+    catch (const std::out_of_range& ex) {
+        Log(logError) << "json_set_brdf: brdf \""<< brdf_name <<"\" not found:" << ex.what();
+    }
 }
 
 static void json_set_texture(const json& j, Texture<Spectrum>* ptr, const std::string& dir)
@@ -107,40 +124,44 @@ static void set_params(const json& j, const Params& params, const std::string& d
     std::map<std::string, std::shared_ptr<Brdf>>& brdf_ref)
 {
     for (int i = 0; i < params.count; i++) {
-        if (j.contains(params.names[i])) {
-            switch (params.types[i]) {
-            case Params::Type::BOOL:
-                json_set_bool(j[params.names[i]], (bool*)params.ptrs[i]);
+        Param p = params.list[i];
+        if (j.contains(p.name)) {
+            switch (p.type) {
+            case ParamType::BOOL:
+                json_set_bool(j[p.name], (bool*)p.ptr);
                 break;
-            case Params::Type::FLOAT:
-                json_set_float(j[params.names[i]], (float*)params.ptrs[i]);
+            case ParamType::FLOAT:
+                json_set_float(j[p.name], (float*)p.ptr);
                 break;
-            case Params::Type::INT:
-                json_set_int(j[params.names[i]], (int*)params.ptrs[i]);
+            case ParamType::INT:
+                json_set_int(j[p.name], (int*)p.ptr);
                 break;
-            case Params::Type::VEC3:
-                json_set_vec3(j[params.names[i]], (vec3*)params.ptrs[i]);
+            case ParamType::VEC3:
+                json_set_vec3(j[p.name], (vec3*)p.ptr);
                 break;
-            case Params::Type::IOR:
-                json_set_ior(j[params.names[i]], (Spectrum*)params.ptrs[i]);
+            case ParamType::RGB:
+                json_set_rgb(j[p.name], (vec3*)p.ptr);
                 break;
-            case Params::Type::PATH:
-                json_set_path(j[params.names[i]], (std::string*)params.ptrs[i], dir);
+            case ParamType::IOR:
+                json_set_ior(j[p.name], (Spectrum*)p.ptr);
                 break;
-            case Params::Type::BRDF:
-                json_set_brdf(j[params.names[i]],
-                    (std::shared_ptr<Brdf>*)params.ptrs[i], brdf_ref);
+            case ParamType::PATH:
+                json_set_path(j[p.name], (std::string*)p.ptr, dir);
                 break;
-            case Params::Type::TEXTURE:
-                json_set_texture(j[params.names[i]],
-                    (Texture<Spectrum>*)params.ptrs[i], dir);
+            case ParamType::BRDF:
+                json_set_brdf(j[p.name],
+                    (std::shared_ptr<Brdf>*)p.ptr, brdf_ref);
+                break;
+            case ParamType::TEXTURE:
+                json_set_texture(j[p.name],
+                    (Texture<Spectrum>*)p.ptr, dir);
                 break;
             default:
-                Log(logError) << "json to Params::Type not defined";
+                Log(logError) << "json to ParamType not defined";
                 break;
             }
         } else {
-            Log(logInfo) << "missing : " << params.names[i];
+            Log(logInfo) << "missing : " << p.name;
         }
     }
 }
