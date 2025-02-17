@@ -51,63 +51,28 @@ public:
     RTCGeometry rtc_geom; /**< Embree RTC geometry. */
     int rtc_id;
     glm::mat4 local_to_world;
+
 };
 
 /**
  * @brief Class representing a triangle mesh geometry.
  */
-class Mesh : public Geometry {
+class TriangleMesh : public Geometry {
 public:
     /**
      * @brief Default constructor for Mesh.
      * Initializes the geometry type and links parameters.
      */
-    Mesh()
-        : Geometry("Mesh")
+    TriangleMesh(const std::string& type)
+        : Geometry(type)
     {
-        link_params();
     };
 
     /**
-     * @brief Initialize the mesh geometry by parsing an OBJ file.
+     * @brief Initialize the mesh geometry.
      */
-    void init()
-    {
-        // Parse obj
-        fastObjMesh* fobj = fast_obj_read(filename.c_str());
-        if (!fobj) {
-            Log(logError) << "Could not read : " << filename;
-            return;
-        }
+    virtual void init() = 0;
 
-        std::map<std::pair<uint32_t, uint32_t>, uint32_t> exist;
-        for (int i = 0; i < fobj->face_count; i++) {
-            glm::uvec3 idx;
-
-            for (int j = 0; j < 3; j++) {
-                int iv = fobj->indices[3 * i + j].p;
-                int in = fobj->indices[3 * i + j].n;
-
-                std::map<std::pair<uint32_t, uint32_t>, uint32_t>::iterator iter = exist.find({ iv, in });
-                if (iter != exist.end()) {
-                    idx[j] = iter->second;
-                } else {
-                    idx[j] = vertex.size();
-                    exist[{ iv, in }] = vertex.size();
-                    vertex.push_back(vec3(fobj->positions[3 * iv],
-                        fobj->positions[3 * iv + 1],
-                        fobj->positions[3 * iv + 2]));
-                    normal.push_back(vec3(fobj->normals[3 * in],
-                        fobj->normals[3 * in + 1],
-                        fobj->normals[3 * in + 2]));
-                }
-            }
-
-            triangle_indices.push_back(idx);
-        }
-
-        fast_obj_destroy(fobj);
-    };
 
     /**
      * @brief Initialize the Embree RTC geometry for the mesh.
@@ -154,13 +119,73 @@ public:
 
         return glm::normalize(n2 * rayhit.hit.u + n3 * rayhit.hit.v + n1 * (1 - rayhit.hit.u - rayhit.hit.v));
     }
-
-    std::string filename; /**< Filename of the OBJ file. */
+    
     std::vector<vec3> normal; /**< Vertex normals. */
     std::vector<vec3> vertex; /**< Vertex positions. */
-    std::vector<glm::uvec3>
-        triangle_indices; /**< Indices of triangle vertices. */
+    std::vector<glm::uvec3> triangle_indices; /**< Indices of triangle vertices. */
 
+};
+
+/**
+ * @brief Class representing a triangle mesh geometry.
+ */
+class Mesh : public TriangleMesh {
+public:
+    /**
+     * @brief Default constructor for Mesh.
+     * Initializes the geometry type and links parameters.
+     */
+    Mesh()
+        : TriangleMesh("Mesh")
+    {
+        link_params();
+    };
+
+    /**
+     * @brief Initialize the mesh geometry by parsing an OBJ file.
+     */
+    void init()
+    {
+        // Parse obj
+        fastObjMesh* fobj = fast_obj_read(filename.c_str());
+        if (!fobj) {
+            Log(logError) << "Could not read : " << filename;
+            return;
+        }
+
+        std::map<std::pair<uint32_t, uint32_t>, uint32_t> exist;
+        for (int i = 0; i < fobj->face_count; i++) {
+            glm::uvec3 idx;
+
+            for (int j = 0; j < 3; j++) {
+                int iv = fobj->indices[3 * i + j].p;
+                int in = fobj->indices[3 * i + j].n;
+
+                std::map<std::pair<uint32_t, uint32_t>, uint32_t>::iterator iter = exist.find({ iv, in });
+                if (iter != exist.end()) {
+                    idx[j] = iter->second;
+                }
+                else {
+                    idx[j] = vertex.size();
+                    exist[{ iv, in }] = vertex.size();
+                    vertex.push_back(vec3(fobj->positions[3 * iv],
+                        fobj->positions[3 * iv + 1],
+                        fobj->positions[3 * iv + 2]));
+                    normal.push_back(vec3(fobj->normals[3 * in],
+                        fobj->normals[3 * in + 1],
+                        fobj->normals[3 * in + 2]));
+                }
+            }
+
+            triangle_indices.push_back(idx);
+        }
+
+        fast_obj_destroy(fobj);
+    };
+
+
+    std::string filename; /**< Filename of the OBJ file. */
+   
 protected:
     /**
      * @brief Link parameters with the Params struct.
@@ -172,6 +197,52 @@ protected:
         params.add("local_to_world", ParamType::MAT4, &local_to_world);
     }
 };
+
+
+
+
+/**
+ * @brief Class representing a Rectangle geometry.
+ */
+class Rectangle : public TriangleMesh {
+public:
+    Rectangle()
+        : TriangleMesh("Rectangle")
+    {
+        link_params();
+
+        this->brdf = std::shared_ptr<Brdf>(nullptr);
+    };
+
+    /**
+     * @brief Initialize the sphere geometry.
+     */
+    void init() {
+        normal.push_back(vec3(0, 1, 0));
+        normal.push_back(vec3(0, 1, 0));
+        normal.push_back(vec3(0, 1, 0));
+        normal.push_back(vec3(0, 1, 0));
+        vertex.push_back(vec3(1, 0, 1));
+        vertex.push_back(vec3(1, 0, -1));
+        vertex.push_back(vec3(-1, 0, -1));
+        vertex.push_back(vec3(-1, 0, 1));
+        triangle_indices.push_back(glm::uvec3(0, 1, 2));
+        triangle_indices.push_back(glm::uvec3(0, 2, 3));
+    };
+
+
+protected:
+    /**
+     * @brief Link parameters with the Params struct.
+     */
+    void link_params()
+    {
+        params.add("brdf", ParamType::BRDF, &brdf);
+        params.add("local_to_world", ParamType::MAT4, &local_to_world);
+    }
+};
+
+
 
 /**
  * @brief Class representing a sphere geometry.
@@ -242,5 +313,6 @@ protected:
         params.add("local_to_world", ParamType::MAT4, &local_to_world);
     }
 };
+
 
 } // namespace LT_NAMESPACE
