@@ -237,4 +237,38 @@ namespace LT_NAMESPACE {
     }
 
 
+
+
+
+
+    Light::Sample RectangleLight::sample(const SurfaceInteraction& si, Sampler& sampler)
+    {
+        Sample s;
+
+        vec3 u = rectangle->vertex[1] - rectangle->vertex[0];
+        vec3 v = rectangle->vertex[2] - rectangle->vertex[0];
+        vec3 point_on_surface = rectangle->vertex[0] + u * sampler.next_float() + v * sampler.next_float();
+        
+        vec3 direction = si.pos - point_on_surface;
+        Float distance = glm::length(direction);
+        direction /= distance;
+
+        Float light_cosine = std::abs(glm::dot(rectangle->normal[0], -direction));
+        Float light_area = 4. * glm::determinant(rectangle->local_to_world);
+
+        s.direction = direction;
+        s.pdf = distance * distance / (light_area * light_cosine);
+        s.expected_distance_to_intersection = distance;
+        s.emission = rectangle->brdf->emission();
+        return s;
+    }
+
+    Spectrum RectangleLight::eval(const vec3& direction) { return rectangle->brdf->emission(); }
+
+    Float RectangleLight::pdf(const vec3& p, const vec3& ld)
+    {
+        return 1. / (4. * glm::determinant(rectangle->local_to_world));
+    }
+
+
 } // namespace LT_NAMESPACE

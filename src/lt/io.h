@@ -54,6 +54,63 @@ static void json_set_vec3(const json& j, vec3* ptr)
     (*ptr)[2] = j[2];
 }
 
+static void json_set_vec4(const json& j, glm::vec4* ptr)
+{
+    (*ptr)[0] = j[0];
+    (*ptr)[1] = j[1];
+    (*ptr)[2] = j[2];
+    (*ptr)[4] = j[3];
+}
+
+
+static void json_set_mat4(const json& j, glm::mat4* ptr)
+{
+    // Row major
+    /*
+    (*ptr)[0][0] = j[0];
+    (*ptr)[0][1] = j[1];
+    (*ptr)[0][2] = j[2];
+    (*ptr)[0][3] = j[3];
+
+    (*ptr)[1][0] = j[4];
+    (*ptr)[1][1] = j[5];
+    (*ptr)[1][2] = j[6];
+    (*ptr)[1][3] = j[7];
+
+    (*ptr)[2][0] = j[8];
+    (*ptr)[2][1] = j[9];
+    (*ptr)[2][2] = j[10];
+    (*ptr)[2][3] = j[11];
+
+    (*ptr)[3][0] = j[12];
+    (*ptr)[3][1] = j[13];
+    (*ptr)[3][2] = j[14];
+    (*ptr)[3][3] = j[15];
+    */
+
+    // Column major
+    (*ptr)[0][0] = j[0];
+    (*ptr)[0][1] = j[4];
+    (*ptr)[0][2] = j[8];
+    (*ptr)[0][3] = j[12];
+
+    (*ptr)[1][0] = j[1];
+    (*ptr)[1][1] = j[5];
+    (*ptr)[1][2] = j[9];
+    (*ptr)[1][3] = j[13];
+
+    (*ptr)[2][0] = j[2];
+    (*ptr)[2][1] = j[6];
+    (*ptr)[2][2] = j[10];
+    (*ptr)[2][3] = j[14];
+
+    (*ptr)[3][0] = j[3];
+    (*ptr)[3][1] = j[7];
+    (*ptr)[3][2] = j[11];
+    (*ptr)[3][3] = j[15];
+}
+
+
 /**
  * @brief Set a rgb value from JSON.
  * @param j The JSON value.
@@ -155,6 +212,9 @@ static void set_params(const json& j, const Params& params, const std::string& d
             case ParamType::TEXTURE:
                 json_set_texture(j[p.name],
                     (Texture<Spectrum>*)p.ptr, dir);
+                break;
+            case ParamType::MAT4:
+                json_set_mat4(j[p.name], (glm::mat4*)p.ptr);
                 break;
             default:
                 Log(logError) << "json to ParamType not defined";
@@ -331,6 +391,11 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
                 sphere_light->sphere = std::dynamic_pointer_cast<Sphere>(geometry);
                 sphere_light->init();
                 scn.lights.push_back(sphere_light);
+            } else if (geometry->brdf->is_emissive() && geometry->type == "Rectangle") {
+                std::shared_ptr<RectangleLight> light = std::make_shared<RectangleLight>();
+                light->rectangle = std::dynamic_pointer_cast<Rectangle>(geometry);
+                light->init();
+                scn.lights.push_back(light);
             }
 
             // Add the geometry to the scene

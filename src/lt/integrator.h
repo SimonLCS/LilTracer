@@ -179,6 +179,7 @@ public:
         const std::shared_ptr<Light>& light, Scene& scene,
         Sampler& sampler)
     {
+
         Spectrum contrib = vec3(0.);
         
         si.pos -= r.d * 0.00001f;
@@ -189,13 +190,22 @@ public:
 
         vec3 wo = si.to_local(-ls.direction);
         vec3 wi = si.to_local(-r.d);
+        
+        bool two_sided = true;
+        bool flip = two_sided && wi.z < 0.;
+        if (flip) {
+            wi = -wi;
+            wo = -wo;
+        }
 
         Ray rs(si.pos,-ls.direction);
 
-        if (!scene.shadow(rs, ls.expected_distance_to_intersection-0.00001)) {
+        if (!scene.shadow_to(rs, ls.expected_distance_to_intersection)) {
+
             if (wi.z < 0.00001) {
                 return contrib;
             }
+
             Spectrum brdf_contrib = si.brdf->eval(wi, wo, sampler);
             #if defined(USE_MIS)
             if (light->is_dirac()) {
@@ -215,8 +225,11 @@ public:
             #endif
         }
 
+        //return Spectrum(0, 0, 0);
+
         #if defined(USE_MIS)
         if (!light->is_dirac()) {
+
             Brdf::Sample bs = si.brdf->sample(wi, sampler);
             if (wi.z < 0.00001 || bs.wo.z < 0.00001) {
                 return contrib;
@@ -288,6 +301,8 @@ public:
             vec3 wi = si.to_local(-r.d);
             if (wi.z < 0.000001)
                 return s;
+
+            
 
             Brdf::Sample bs = si.brdf->sample(wi, sampler);
 
@@ -416,7 +431,15 @@ public:
 
                 // Compute BRDF  contrib
                 vec3 wi = si.to_local(-r.d);
+                
+                bool two_sided = true;
+                bool flip = two_sided && wi.z < 0.;
+                if (flip) {
+                    wi = -wi;
+                }
+
                 Brdf::Sample bs = si.brdf->sample(wi, sampler);
+
 
                 if (bs.wo.z < 0.0001 || wi.z < 0.0001)
                     break;
@@ -429,6 +452,10 @@ public:
                 #else
                 throughput *= bs.value;
                 #endif
+
+                if (flip) {
+                    bs.wo = -bs.wo;
+                }
 
                 // offset si.pos for next bounce
                 vec3 p = si.pos - r.d * 0.00001f;

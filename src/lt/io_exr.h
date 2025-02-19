@@ -13,11 +13,10 @@ static int save_sensor_exr(const Sensor& sen, const std::string& filename)
     namespace fs = std::filesystem;
     fs::path p(filename);
     fs::path d = p.parent_path();
-    bool exist = fs::exists(d);
-    std::cout << exist << std::endl;
-    bool is_dir = fs::is_directory(d);
-    std::cout << is_dir << std::endl;
 
+    bool exist = fs::exists(d);
+    bool is_dir = fs::is_directory(d);
+    
     if (!exist || !is_dir) { // Check if src folder exists
         fs::create_directories(d); // create src folder
     }

@@ -56,6 +56,7 @@ public:
     vec3 tan; /**< Tangent vector. */
     vec3 bitan; /**< Bitangent vector. */
 
+
     /**
      * @brief Finalizes the surface interaction after the setting normal and
      * position vectors by computing the orthonormal basis
@@ -73,7 +74,9 @@ public:
      * @param v The vector to transform.
      * @return The transformed vector in world space.
      */
-    vec3 to_world(const vec3& v) { return tbn * v; }
+    vec3 to_world(const vec3& v) {
+        return tbn * v;
+    }
 
     /**
      * @brief Transforms a vector from world space to local space.
@@ -81,7 +84,9 @@ public:
      * @param v The vector to transform.
      * @return The transformed vector in local space.
      */
-    vec3 to_local(const vec3& v) { return inv_tbn * v; }
+    vec3 to_local(const vec3& v) {
+        return inv_tbn * v;
+    }
 };
 
 } // namespace LT_NAMESPACE

@@ -186,4 +186,31 @@ namespace LT_NAMESPACE {
         void link_params() { }
     };
 
+    class RectangleLight : public Light {
+    public:
+        RectangleLight()
+            : Light("RectangleLight")
+        {
+            flags = (Flags)0;
+            link_params();
+        }
+
+        Sample sample(const SurfaceInteraction& si, Sampler& sampler);
+
+        Spectrum eval(const vec3& direction);
+        Float pdf(const vec3& p, const vec3& ld);
+
+        int geometry_id() override { return rectangle->rtc_id; }
+
+        std::shared_ptr<Rectangle> rectangle;
+
+
+    protected:
+        /**
+         * @brief All param are from Sphere and Sphere::brdf.
+         */
+        void link_params() { }
+    };
+
+
 } // namespace LT_NAMESPACE

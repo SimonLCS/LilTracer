@@ -122,6 +122,30 @@ public:
     return false;
     }
 
+    bool shadow_to(const Ray& r, const Float& tfar) {
+        
+
+        RTCRayHit rayhit;
+        rayhit.ray.org_x = r.o.x;
+        rayhit.ray.org_y = r.o.y;
+        rayhit.ray.org_z = r.o.z;
+        rayhit.ray.dir_x = r.d.x;
+        rayhit.ray.dir_y = r.d.y;
+        rayhit.ray.dir_z = r.d.z;
+        rayhit.ray.tnear = 0.f;
+        rayhit.ray.tfar = std::numeric_limits<float>::infinity();
+        rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+
+        rtcIntersect1(scene, &context, &rayhit);
+
+        float epsilon = 0.0001;
+        if (rayhit.ray.tfar < tfar + epsilon && rayhit.ray.tfar > tfar - epsilon) {
+            return false;
+        }
+
+        return true;
+    }
+
     /*
     std::shared_ptr<Geometry> intersect(const Ray& r)
     {
@@ -155,8 +179,8 @@ public:
 
         for (int i = 0; i < geometries.size(); i++) {
             geometries[i]->init_rtc(device);
-            rtcGetGeometryTransform(geometries[i]->rtc_geom, 0, RTC_FORMAT_FLOAT4X4_ROW_MAJOR, (float*)(&geometries[i]->local_to_world[0]) );
             rtcCommitGeometry(geometries[i]->rtc_geom);
+            //rtcSetGeometryTransform(geometries[i]->rtc_geom, 0, RTC_FORMAT_FLOAT4X4_ROW_MAJOR, (float*)(&geometries[i]->local_to_world[0]) );
             unsigned int geomID = rtcAttachGeometry(scene, geometries[i]->rtc_geom);
             geometries[i]->rtc_id = geomID;
             rtcReleaseGeometry(geometries[i]->rtc_geom);

@@ -99,6 +99,7 @@ public:
             ib[3 * i + 1] = triangle_indices[i].y;
             ib[3 * i + 2] = triangle_indices[i].z;
         }
+
     }
 
     /**
@@ -153,6 +154,8 @@ public:
             return;
         }
 
+        glm::mat4 inv_tra_local_to_world = glm::inverse(glm::transpose(local_to_world));
+
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> exist;
         for (int i = 0; i < fobj->face_count; i++) {
             glm::uvec3 idx;
@@ -168,12 +171,16 @@ public:
                 else {
                     idx[j] = vertex.size();
                     exist[{ iv, in }] = vertex.size();
-                    vertex.push_back(vec3(fobj->positions[3 * iv],
+                    glm::vec4 local_vertex = glm::vec4(fobj->positions[3 * iv],
                         fobj->positions[3 * iv + 1],
-                        fobj->positions[3 * iv + 2]));
-                    normal.push_back(vec3(fobj->normals[3 * in],
+                        fobj->positions[3 * iv + 2],
+                        1);
+                    glm::vec4 local_normal = glm::vec4(fobj->normals[3 * in],
                         fobj->normals[3 * in + 1],
-                        fobj->normals[3 * in + 2]));
+                        fobj->normals[3 * in + 2],
+                        0);
+                    vertex.push_back(vec3(local_to_world * local_vertex));
+                    normal.push_back(vec3(inv_tra_local_to_world * local_normal));
                 }
             }
 
@@ -218,14 +225,15 @@ public:
      * @brief Initialize the sphere geometry.
      */
     void init() {
-        normal.push_back(vec3(0, 1, 0));
-        normal.push_back(vec3(0, 1, 0));
-        normal.push_back(vec3(0, 1, 0));
-        normal.push_back(vec3(0, 1, 0));
-        vertex.push_back(vec3(1, 0, 1));
-        vertex.push_back(vec3(1, 0, -1));
-        vertex.push_back(vec3(-1, 0, -1));
-        vertex.push_back(vec3(-1, 0, 1));
+        glm::mat4 inv_tra_local_to_world = glm::inverse(glm::transpose(local_to_world));
+        normal.push_back(vec3(inv_tra_local_to_world * glm::vec4(0, 0, 1, 0)));
+        normal.push_back(vec3(inv_tra_local_to_world * glm::vec4(0, 0, 1, 0)));
+        normal.push_back(vec3(inv_tra_local_to_world * glm::vec4(0, 0, 1, 0)));
+        normal.push_back(vec3(inv_tra_local_to_world * glm::vec4(0, 0, 1, 0)));
+        vertex.push_back(vec3(local_to_world * glm::vec4(1, 1, 0, 1)));
+        vertex.push_back(vec3(local_to_world * glm::vec4(1, -1, 0, 1)));
+        vertex.push_back(vec3(local_to_world * glm::vec4(-1, -1, 0, 1)));
+        vertex.push_back(vec3(local_to_world * glm::vec4(-1, 1, 0, 1)));
         triangle_indices.push_back(glm::uvec3(0, 1, 2));
         triangle_indices.push_back(glm::uvec3(0, 2, 3));
     };
