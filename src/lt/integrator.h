@@ -120,6 +120,23 @@ public:
      */
     virtual Spectrum render_pixel(Ray& r, Scene& scene, Sampler& sampler) = 0;
 
+    // TODO: add infinite_light support
+    Spectrum sample_one_light(Ray& r, SurfaceInteraction& si,
+        Scene& scene, Sampler& sampler)
+    {
+        int n_light = scene.lights.size();
+
+        if (n_light == 0)
+            return Spectrum(0.);
+
+        Float pdf;
+        //std::shared_ptr<Light> light = scene.ps->sample(sampler.next_float(), &pdf);
+        std::shared_ptr<Light> light = scene.sps->sample(si.pos,sampler.next_float(), &pdf);
+
+        return estimate_direct(r, si, light, scene, sampler) / pdf;
+    }
+
+
     /**
      * @brief Estimates direct lighting contribution from random light source.
      * @param r The ray representing the pixel.
@@ -376,7 +393,8 @@ public:
             if (si.brdf->is_emissive())
                 return si.brdf->emission();
 
-            s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : uniform_sample_one_light(r, si, scene, sampler);
+            s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : sample_one_light(r, si, scene, sampler);
+            //s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : uniform_sample_one_light(r, si, scene, sampler);
         } else {
             for (const auto& light : scene.infinite_lights)
                 s += light->eval(r.d);

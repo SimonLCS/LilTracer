@@ -330,4 +330,29 @@ inline double chisqr(int Dof, double Cv)
     return (1.0 - PValue);
 }
 
+
+class Bbox {
+public:
+    vec3 pmin;
+    vec3 pmax;
+
+    Bbox() : pmin(0), pmax(0){}
+
+    Bbox(vec3 p) {
+        pmin = p;
+        pmax = p;
+    }
+
+    void grow(const Bbox& b) {
+        pmin = glm::min(pmin, b.pmin);
+        pmax = glm::max(pmax, b.pmax);
+    }
+
+    void grow(const vec3& p) {
+        pmin = glm::min(pmin, p);
+        pmax = glm::max(pmax, p);
+    }
+};
+
+
 } // namespace LT_NAMESPACE

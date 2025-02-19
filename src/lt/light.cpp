@@ -40,6 +40,16 @@ namespace LT_NAMESPACE {
         return 0.;
     }
 
+    Float DirectionnalLight::power()
+    {
+        return intensity;
+    }
+
+    Float DirectionnalLight::distance(const vec3& p)
+    {
+        return 1;
+    }
+
     void EnvironmentLight::init()
     {
         dtheta = pi / (Float)envmap.h;
@@ -50,6 +60,7 @@ namespace LT_NAMESPACE {
             cumulative_density.data,
             cumulative_density.data + cumulative_density.w * cumulative_density.h);
         c.insert(c.begin(), 0.);
+
     }
 
     Light::Sample EnvironmentLight::sample(const SurfaceInteraction& si, Sampler& sampler)
@@ -128,6 +139,16 @@ namespace LT_NAMESPACE {
         return density.eval(u, v) / solid_angle;
     }
 
+    Float EnvironmentLight::power()
+    {
+        return power_;
+    }
+
+    Float EnvironmentLight::distance(const vec3& p)
+    {
+        return 1;
+    }
+
     void EnvironmentLight::compute_density()
     {
         // Compute density
@@ -154,6 +175,8 @@ namespace LT_NAMESPACE {
         for (int n = 1; n < envmap.w * envmap.h; n++) {
             cumulative_density.data[n] = cumulative_density.data[n - 1] + density.data[n];
         }
+
+        power_ = cumulative_density.data[envmap.w * envmap.h - 1] * intensity;
 
         // Normalize density
         for (int n = 0; n < envmap.w * envmap.h; n++) {
@@ -236,9 +259,16 @@ namespace LT_NAMESPACE {
         return 1. / solid_angle;
     }
 
+    Float SphereLight::power()
+    {
+        Spectrum em = sphere->brdf->emission();
+        return 4. * pi * sphere->rad * sphere->rad * (em.r + em.g + em.b) * 0.33333333;
+    }
 
-
-
+    Float SphereLight::distance(const vec3& p)
+    {
+        return glm::distance(p,sphere->pos);
+    }
 
 
     Light::Sample RectangleLight::sample(const SurfaceInteraction& si, Sampler& sampler)
@@ -270,5 +300,15 @@ namespace LT_NAMESPACE {
         return 1. / (4. * glm::determinant(rectangle->local_to_world));
     }
 
+    Float RectangleLight::power()
+    {
+        Spectrum em = rectangle->brdf->emission();
+        return 4. * glm::determinant(rectangle->local_to_world) * (em.r + em.g + em.b) * 0.33333333;
+    }
+
+    Float RectangleLight::distance(const vec3& p)
+    {
+        return glm::distance(p, (rectangle->vertex[0] + rectangle->vertex[2]) * 0.5f);
+    }
 
 } // namespace LT_NAMESPACE

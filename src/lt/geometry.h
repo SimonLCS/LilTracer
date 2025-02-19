@@ -45,6 +45,8 @@ public:
      */
     virtual void init_rtc(RTCDevice device) = 0;
 
+    virtual Bbox bbox() = 0;
+
     std::shared_ptr<Brdf>
         brdf; /**< Pointer to the BRDF associated with the geometry. */
 
@@ -73,6 +75,12 @@ public:
      */
     virtual void init() = 0;
 
+    Bbox bbox() {
+        Bbox b(vertex[0]);
+        for (auto v : vertex)
+            b.grow(v);
+        return b;
+    }
 
     /**
      * @brief Initialize the Embree RTC geometry for the mesh.
@@ -275,6 +283,13 @@ public:
      * @brief Initialize the sphere geometry.
      */
     void init() {};
+
+    Bbox bbox() {
+        Bbox b(pos);
+        b.grow(pos + rad);
+        b.grow(pos - rad);
+        return b;
+    }
 
     /**
      * @brief Initialize the Embree RTC geometry for the sphere.

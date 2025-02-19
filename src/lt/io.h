@@ -407,6 +407,7 @@ static bool generate_from_json(const std::string& path, const std::string& str, 
 
     // Initialize the scene's acceleration structure
     scn.init_rtc();
+    scn.init();
 
     return true;
 }

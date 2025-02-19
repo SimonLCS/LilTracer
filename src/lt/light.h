@@ -47,6 +47,8 @@ namespace LT_NAMESPACE {
 
         virtual Spectrum eval(const vec3& direction) = 0;
         virtual Float pdf(const vec3& p, const vec3& ld) = 0;
+        virtual Float power() = 0;
+        virtual Float distance(const vec3& p) = 0;
 
         virtual int geometry_id() { return RTC_INVALID_GEOMETRY_ID; }
 
@@ -99,6 +101,8 @@ namespace LT_NAMESPACE {
 
         Spectrum eval(const vec3& direction);
         Float pdf(const vec3& p, const vec3& ld);
+        Float power();
+        Float distance(const vec3& p);
 
         /**
          * @brief Initialize the directional light.
@@ -136,6 +140,8 @@ namespace LT_NAMESPACE {
 
         Spectrum eval(const vec3& direction);
         Float pdf(const vec3& p, const vec3& ld);
+        Float power();
+        Float distance(const vec3& p);
 
         void compute_density();
 
@@ -150,6 +156,8 @@ namespace LT_NAMESPACE {
         std::vector<Float> c;
         Float dtheta;
         Float dphi;
+
+        Float power_;
 
     protected:
         void link_params()
@@ -173,6 +181,8 @@ namespace LT_NAMESPACE {
 
         Spectrum eval(const vec3& direction);
         Float pdf(const vec3& p, const vec3& ld);
+        Float power();
+        Float distance(const vec3& p);
 
         int geometry_id() override { return sphere->rtc_id; }
 
@@ -199,6 +209,8 @@ namespace LT_NAMESPACE {
 
         Spectrum eval(const vec3& direction);
         Float pdf(const vec3& p, const vec3& ld);
+        Float power();
+        Float distance(const vec3& p);
 
         int geometry_id() override { return rectangle->rtc_id; }
 
