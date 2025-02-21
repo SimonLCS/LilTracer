@@ -13,8 +13,7 @@ namespace LT_NAMESPACE {
 
 class Mix : public Brdf {
 public:
-    PARAMETER(Spectrum, albedo, 0.5); /**< Albedo of the surface. */
-
+    
     Mix() : Brdf("Mix")
     {
         link_params();
@@ -27,25 +26,25 @@ public:
         flags = brdf1->flags | brdf2->flags;
     }
 
-    Spectrum eval(vec3 wi, vec3 wo, Sampler& sampler) {
-        return weight * brdf1->eval(wi, wo, sampler) + (1.f - weight) * brdf2->eval(wi, wo, sampler);
+    Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler) {
+        return weight * brdf1->eval(wi, wo, si, sampler) + (1.f - weight) * brdf2->eval(wi, wo, si, sampler);
     }
 
 
-    Sample sample(const vec3& wi, Sampler& sampler) 
+    Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler)
     {
         Sample bs;
         if (sampler.next_float() < weight) {
-            bs = brdf1->sample(wi, sampler);
+            bs = brdf1->sample(wi, si, sampler);
         }
         else {
-            bs = brdf2->sample(wi, sampler);
+            bs = brdf2->sample(wi, si, sampler);
         }
         return bs;
     }
 
-    Float pdf(const vec3& wi, const vec3& wo) {
-        return weight * brdf1->pdf(wi, wo) + (1.f - weight) * brdf2->pdf(wi, wo);
+    Float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si) {
+        return weight * brdf1->pdf(wi, wo, si) + (1.f - weight) * brdf2->pdf(wi, wo, si);
     }
 
     std::shared_ptr<Brdf> brdf1;

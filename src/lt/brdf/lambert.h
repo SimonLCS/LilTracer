@@ -15,7 +15,7 @@ namespace LT_NAMESPACE {
  */
 class Diffuse : public Brdf {
 public:
-    PARAMETER(Spectrum, albedo, 0.5); /**< Albedo of the surface. */
+    Spectrum albedo; /**< Albedo of the surface. */
 
     Diffuse(const Spectrum& albedo = Spectrum(0.5))
         : Brdf("Diffuse")
@@ -26,9 +26,9 @@ public:
     }
 
 
-    Spectrum eval(vec3 wi, vec3 wo, Sampler& sampler);
-    Sample sample(const vec3& wi, Sampler& sampler);
-    float pdf(const vec3& wi, const vec3& wo);
+    Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
+    Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler);
+    float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si);
 
 protected:
     void link_params() { params.add("albedo", ParamType::RGB, &albedo); }

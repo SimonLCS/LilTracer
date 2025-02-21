@@ -5,10 +5,13 @@
 
 #pragma once
 
-#include <lt/brdf_common.h>
+//#include <lt/brdf_common.h>
+#include <lt/brdf/brdf.h>
 #include <lt/lt_common.h>
 
 namespace LT_NAMESPACE {
+
+class Brdf;
 
 class SurfaceInteraction {
 public:
@@ -88,5 +91,6 @@ public:
         return inv_tbn * v;
     }
 };
+
 
 } // namespace LT_NAMESPACE

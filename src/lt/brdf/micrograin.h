@@ -46,6 +46,7 @@ namespace LT_NAMESPACE {
         Float one_to_many(const Float& sigma_);
 
         Float tau_0;
+
         bool use_smith;
         bool height_and_direction;
         bool sig_asia_2023;
@@ -64,9 +65,9 @@ namespace LT_NAMESPACE {
             link_params();
         }
 
-        Spectrum eval(vec3 wi, vec3 wo, Sampler& sampler) {
-            Spectrum surf_brdf = RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::eval(wi, wo, sampler);
-            Spectrum base_brdf = base->eval(wi, wo, sampler);
+        Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler) {
+            Spectrum surf_brdf = RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::eval(wi, wo, si, sampler);
+            Spectrum base_brdf = base->eval(wi, wo, si, sampler);
             
             if (ms.sig_asia_2023) {
                 Float wei = ms.w_plus(to_unit_space(wi), to_unit_space(wo));
@@ -77,7 +78,7 @@ namespace LT_NAMESPACE {
             return ms.tau_0 * surf_brdf + (1.f - ms.tau_0) * base_brdf * visibility;
         }
 
-        Brdf::Sample sample(const vec3& wi, Sampler& sampler)
+        Brdf::Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler)
         {
             Brdf::Sample bs;
 
@@ -86,26 +87,26 @@ namespace LT_NAMESPACE {
             Float base_weight = porosity / (ms.tau_0 + porosity);
                        
             if (sampler.next_float() < base_weight) {
-                bs = base->sample(wi, sampler);
+                bs = base->sample(wi, si, sampler);
             }
             else {
-                bs = RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::sample(wi, sampler);
+                bs = RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::sample(wi, si, sampler);
             }
 
-            Float pdf_ = (1 - base_weight) * RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi, bs.wo) + base_weight * base->pdf(wi, bs.wo);
-            bs.value = eval(wi, bs.wo, sampler) / pdf_;
+            Float pdf_ = (1 - base_weight) * RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi, bs.wo, si) + base_weight * base->pdf(wi, bs.wo, si);
+            bs.value = eval(wi, bs.wo, si, sampler) / pdf_;
 
             return bs;
         }
 
-        Float pdf(const vec3& wi, const vec3& wo)
+        Float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si)
         {
 
             Float porosity = 1 - ms.tau_v(to_unit_space(wi));
             // Eq 26 Siggraph 2024
             Float base_weight = porosity / (ms.tau_0 + porosity);
            
-            return (1- base_weight) * RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi,wo) + base_weight * base->pdf(wi,wo);
+            return (1- base_weight) * RoughShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi,wo, si) + base_weight * base->pdf(wi,wo, si);
         }
         
         std::shared_ptr<Brdf> base;
@@ -138,15 +139,15 @@ namespace LT_NAMESPACE {
             link_params();
         }
 
-        Spectrum eval(vec3 wi, vec3 wo, Sampler & sampler) {
-            Spectrum surf_brdf = DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::eval(wi, wo, sampler);
-            Spectrum base_brdf = base->eval(wi, wo, sampler);
+        Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler & sampler) {
+            Spectrum surf_brdf = DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::eval(wi, wo, si,sampler);
+            Spectrum base_brdf = base->eval(wi, wo,si, sampler);
 
             Float visibility = ms.G2_0(to_unit_space(wi), to_unit_space(wo));
             return ms.tau_0 * surf_brdf + (1.f - ms.tau_0) * base_brdf * visibility;
         }
 
-        Brdf::Sample sample(const vec3 & wi, Sampler & sampler)
+        Brdf::Sample sample(const vec3 & wi, const SurfaceInteraction& si, Sampler & sampler)
         {
             Brdf::Sample bs;
 
@@ -155,25 +156,25 @@ namespace LT_NAMESPACE {
             Float base_weight = porosity / (ms.tau_0 + porosity);
 
             if (sampler.next_float() < base_weight) {
-                bs = base->sample(wi, sampler);
+                bs = base->sample(wi, si, sampler);
             }
             else {
-                bs = DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::sample(wi, sampler);
+                bs = DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::sample(wi, si, sampler);
             }
 
-            Float pdf_ = (1 - base_weight) * DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi, bs.wo) + base_weight * base->pdf(wi, bs.wo);
-            bs.value = eval(wi, bs.wo, sampler) / pdf_;
+            Float pdf_ = (1 - base_weight) * DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi, bs.wo,si) + base_weight * base->pdf(wi, bs.wo, si);
+            bs.value = eval(wi, bs.wo, si,sampler) / pdf_;
 
             return bs;
         }
 
-        Float pdf(const vec3 & wi, const vec3 & wo)
+        Float pdf(const vec3 & wi, const vec3 & wo, const SurfaceInteraction& si)
         {
             Float porosity = 1 - ms.tau_v(to_unit_space(wi));
             // Eq 26 Siggraph 2024
             Float base_weight = porosity / (ms.tau_0 + porosity);
 
-            return (1 - base_weight) * DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi, wo) + base_weight * base->pdf(wi, wo);
+            return (1 - base_weight) * DiffuseShapeInvariantMicrosurface<MicrograinMicrosurface>::pdf(wi, wo, si) + base_weight * base->pdf(wi, wo, si);
         }
 
         std::shared_ptr<Brdf> base;

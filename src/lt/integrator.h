@@ -223,12 +223,12 @@ public:
                 return contrib;
             }
 
-            Spectrum brdf_contrib = si.brdf->eval(wi, wo, sampler);
+            Spectrum brdf_contrib = si.brdf->eval(wi, wo, si, sampler);
             #if defined(USE_MIS)
             if (light->is_dirac()) {
                 contrib += brdf_contrib * ls.emission / ls.pdf;
             } else {
-                Float brdf_pdf = si.brdf->pdf(wi, wo);
+                Float brdf_pdf = si.brdf->pdf(wi, wo, si);
                 assert(brdf_pdf == brdf_pdf);
                 Float weight = power_heuristic(ls.pdf, brdf_pdf);
                 assert(weight == weight);
@@ -247,7 +247,7 @@ public:
         #if defined(USE_MIS)
         if (!light->is_dirac()) {
 
-            Brdf::Sample bs = si.brdf->sample(wi, sampler);
+            Brdf::Sample bs = si.brdf->sample(wi, si, sampler);
             if (wi.z < 0.00001 || bs.wo.z < 0.00001) {
                 return contrib;
             }
@@ -274,7 +274,7 @@ public:
             }
 
             Spectrum emission = light->eval(si.to_world(bs.wo)); // No difference in light eval between lights at infinity and area lights
-            Float brdf_pdf = si.brdf->pdf(wi, bs.wo);
+            Float brdf_pdf = si.brdf->pdf(wi, bs.wo, si);
             assert(light_pdf != 0 || brdf_pdf != 0);
             weight = power_heuristic(brdf_pdf, light_pdf);
             assert(weight == weight);
@@ -328,14 +328,14 @@ public:
 
             
 
-            Brdf::Sample bs = si.brdf->sample(wi, sampler);
+            Brdf::Sample bs = si.brdf->sample(wi, si, sampler);
 
             if (bs.wo.z < 0.000001)
                 return s;
 
             #if !defined(SAMPLE_OPTIM)
-            Float pdf = si.brdf->pdf(wi, bs.wo);
-            Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, sampler);
+            Float pdf = si.brdf->pdf(wi, bs.wo, si);
+            Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, si, sampler);
             assert(brdf_cos_weighted.x == brdf_cos_weighted.x);
             #endif
 
@@ -467,15 +467,15 @@ public:
                     wi = -wi;
                 }
 
-                Brdf::Sample bs = si.brdf->sample(wi, sampler);
+                Brdf::Sample bs = si.brdf->sample(wi, si, sampler);
 
 
                 if (bs.wo.z < 0.0001 || wi.z < 0.0001)
                     break;
                 
                 #if !defined(SAMPLE_OPTIM)
-                Float wo_pdf = si.brdf->pdf(wi, bs.wo);
-                Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, sampler);
+                Float wo_pdf = si.brdf->pdf(wi, bs.wo, si);
+                Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, si, sampler);
                 throughput *= brdf_cos_weighted / wo_pdf;
                 assert(throughput == throughput);
                 #else
@@ -599,13 +599,13 @@ public:
 
                         // Compute BRDF  contrib
                         vec3 wi = si.to_local(-r.d);
-                        Brdf::Sample bs = si.brdf->sample(wi, sampler);
+                        Brdf::Sample bs = si.brdf->sample(wi, si, sampler);
 
                         if (bs.wo.z < 0.0001 || wi.z < 0.0001)
                             break;
 
-                        Float wo_pdf = si.brdf->pdf(wi, bs.wo);
-                        Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, sampler);
+                        Float wo_pdf = si.brdf->pdf(wi, bs.wo, si);
+                        Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, si, sampler);
                         throughput *= brdf_cos_weighted / wo_pdf;
                         assert(throughput == throughput);
 

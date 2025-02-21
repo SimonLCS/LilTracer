@@ -25,6 +25,15 @@ struct Texture {
         initialize();
     }
 
+    Texture(const DATA_TYPE& value) 
+        : data(nullptr)
+        , w(1)
+        , h(1) 
+    {
+        initialize();
+        data[0] = value;
+    }
+
     ~Texture() { delete[] data; }
 
     void initialize()
@@ -54,5 +63,10 @@ struct Texture {
         return get(x, y);
     }
 };
+
+
+typedef Texture<Float> Float_tex;
+typedef Texture<vec3> vec3_tex;
+
 
 } // namespace LT_NAMESPACE

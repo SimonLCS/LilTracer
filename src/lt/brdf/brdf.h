@@ -9,9 +9,11 @@
 #include <lt/lt_common.h>
 #include <lt/sampler.h>
 #include <lt/serialize.h>
+#include <lt/surface_interaction.h>
 
 namespace LT_NAMESPACE {
-#define PARAMETER(type, name, default_values) type name = type(default_values)
+
+//#define PARAMETER(type, name, default_values) type name = type(default_values)
 
 
 /**
@@ -45,6 +47,7 @@ public:
      */
     Brdf(const std::string& type)
         : Serializable(type) 
+        , flags(Flags::diffuse)
     {};
 
     /**
@@ -53,7 +56,7 @@ public:
      * @param wo Outgoing direction.
      * @return The evaluated spectrum.
      */
-    virtual Spectrum eval(vec3 wi, vec3 wo, Sampler& sampler);
+    virtual Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
 
     /**
      * @brief Samples the BRDF.
@@ -61,14 +64,14 @@ public:
      * @param sampler The sampler object used for sampling.
      * @return The sampled direction.
      */
-    virtual Sample sample(const vec3& wi, Sampler& sampler);
+    virtual Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler);
 
     /**
      * @brief Computes the density of a sample of wo.
      * @param wo Direction.
      * @return The density value.
      */
-    virtual float pdf(const vec3& wi, const vec3& wo);
+    virtual float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si);
     
     Flags flags;
     inline bool is_emissive() {
