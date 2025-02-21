@@ -316,6 +316,13 @@ public:
 
             // Compute BRDF contrib
             vec3 wi = si.to_local(-r.d);
+            
+            bool two_sided = true;
+            bool flip = two_sided && wi.z < 0.;
+            if (flip) {
+                wi = -wi;
+            }
+
             if (wi.z < 0.000001)
                 return s;
 
@@ -331,6 +338,10 @@ public:
             Spectrum brdf_cos_weighted = si.brdf->eval(wi, bs.wo, sampler);
             assert(brdf_cos_weighted.x == brdf_cos_weighted.x);
             #endif
+
+            if (flip) {
+                bs.wo = -bs.wo;
+            }
 
             Ray r_ = Ray(si.pos - r.d * 0.0001f, si.to_world(bs.wo));
             Spectrum indirect = render_pixel_rec(r_, scene, sampler, depth + 1);
