@@ -8,6 +8,7 @@
 
 #include "brdf.h"
 
+
 namespace LT_NAMESPACE {
 
 /**
@@ -15,16 +16,15 @@ namespace LT_NAMESPACE {
  */
 class Diffuse : public Brdf {
 public:
-    Spectrum albedo; /**< Albedo of the surface. */
+    SpectrumTex albedo; /**< Albedo of the surface. */
 
-    Diffuse(const Spectrum& albedo = Spectrum(0.5))
+    Diffuse(const SpectrumTex& kd = SpectrumTex(Spectrum(0.5)))
         : Brdf("Diffuse")
-        , albedo(albedo)
+        , albedo(kd)
     {
         flags = Flags::diffuse | Flags::reflection;
         link_params();
     }
-
 
     Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
     Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler);

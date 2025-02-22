@@ -39,6 +39,8 @@ public:
      */
     virtual vec3 get_normal(RTCRayHit rayhit, const vec3& hit_pos) = 0;
 
+    virtual vec2 get_uv(RTCRayHit rayhit, const vec3& hit_pos) = 0;
+
     /**
      * @brief Pure virtual function for initializing Embree RTC geometry.
      * @param device The Embree RTC device.
@@ -128,10 +130,23 @@ public:
 
         return glm::normalize(n2 * rayhit.hit.u + n3 * rayhit.hit.v + n1 * (1 - rayhit.hit.u - rayhit.hit.v));
     }
+
+    vec2 get_uv(RTCRayHit rayhit, const vec3& hit_pos)
+    {
+        unsigned int prim_id = rayhit.hit.primID;
+        glm::uvec3 indices = triangle_indices[prim_id];
+
+        vec2 uv1 = uv[indices.x];
+        vec2 uv2 = uv[indices.y];
+        vec2 uv3 = uv[indices.z];
+
+        return uv2 * rayhit.hit.u + uv3 * rayhit.hit.v + uv1 * (1 - rayhit.hit.u - rayhit.hit.v);
+    }
     
     std::vector<vec3> normal; /**< Vertex normals. */
     std::vector<vec3> vertex; /**< Vertex positions. */
     std::vector<glm::uvec3> triangle_indices; /**< Indices of triangle vertices. */
+    std::vector<vec2> uv; /**< Vertex UV. */
 
 };
 
@@ -189,6 +204,8 @@ public:
                         0);
                     vertex.push_back(vec3(local_to_world * local_vertex));
                     normal.push_back(vec3(inv_tra_local_to_world * local_normal));
+
+                    uv.push_back(vec2(fobj->texcoords[2 * in], fobj->texcoords[2 * in + 1]));
                 }
             }
 
@@ -242,6 +259,10 @@ public:
         vertex.push_back(vec3(local_to_world * glm::vec4(1, -1, 0, 1)));
         vertex.push_back(vec3(local_to_world * glm::vec4(-1, -1, 0, 1)));
         vertex.push_back(vec3(local_to_world * glm::vec4(-1, 1, 0, 1)));
+        uv.push_back(vec2(1., 1.));
+        uv.push_back(vec2(1., 0.));
+        uv.push_back(vec2(0., 0.));
+        uv.push_back(vec2(0., 1.));
         triangle_indices.push_back(glm::uvec3(0, 1, 2));
         triangle_indices.push_back(glm::uvec3(0, 2, 3));
     };
@@ -319,6 +340,14 @@ public:
     vec3 get_normal(RTCRayHit rayhit, const vec3& hit_pos)
     {
         return (hit_pos - pos) / rad;
+    }
+
+    vec2 get_uv(RTCRayHit rayhit, const vec3& hit_pos)
+    {
+        vec3 n = (hit_pos - pos) / rad;
+        float u = glm::acos(n.y) / pi;
+        float v = (glm::atan(n.z,n.x) + pi * 0.5) / pi;
+        return vec2(u, v);
     }
 
     vec3 pos; /**< Center position of the sphere. */

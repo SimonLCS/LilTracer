@@ -10,6 +10,7 @@
 #include <lt/sampler.h>
 #include <lt/serialize.h>
 #include <lt/surface_interaction.h>
+#include <lt/texture.h>
 
 namespace LT_NAMESPACE {
 

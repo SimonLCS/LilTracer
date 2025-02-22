@@ -32,3 +32,6 @@ target_link_libraries(${PROGRAM_NAME}  PRIVATE nlohmann_json nlohmann_json::nloh
 
 find_package(embree 3 CONFIG REQUIRED)
 target_link_libraries(${PROGRAM_NAME} PRIVATE embree)
+
+add_library(stb_image_lib STATIC ../3rd_party/stb_image/stb_image.cpp ../3rd_party/stb_image/stb_image.h)
+target_link_libraries(${PROGRAM_NAME} PRIVATE stb_image_lib)

@@ -57,8 +57,8 @@ namespace LT_NAMESPACE {
 
         compute_density();
         c = std::vector<float>(
-            cumulative_density.data,
-            cumulative_density.data + cumulative_density.w * cumulative_density.h);
+            cumulative_density.data.get(),
+            cumulative_density.data.get() + cumulative_density.w * cumulative_density.h);
         c.insert(c.begin(), 0.);
 
     }
@@ -191,7 +191,7 @@ namespace LT_NAMESPACE {
         std::vector<Float> u = linspace<Float>(0.,1., envmap.w * envmap.h, true);
         
         for (int n = 0; n < envmap.w * envmap.h; n++) {
-            int idx = binary_search<Float>(cumulative_density.data, u[n], envmap.w* envmap.h);
+            int idx = binary_search<Float>(cumulative_density.data.get(), u[n], envmap.w* envmap.h);
             inv_cumulative_density.data[n] = idx;
         }
 

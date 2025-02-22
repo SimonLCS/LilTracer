@@ -24,8 +24,7 @@ public:
         : nor(vec3(0.))
         , pos(vec3(0.))
         , t(1000000.)
-        , u(0.)
-        , v(0.)
+        , uv(0.)
         , brdf(nullptr)
     {
     }
@@ -41,16 +40,14 @@ public:
         : nor(nor)
         , pos(pos)
         , t(1000000.)
-        , u(0.)
-        , v(0.)
+        , uv(0.)
         , brdf(nullptr)
     {
     }
     vec3 nor; /**< Normal at the intersection point. */
     vec3 pos; /**< Position of the intersection point. */
     Float t; /**< Distance to the intersection point. */
-    Float u;
-    Float v;
+    vec2 uv;
     std::shared_ptr<Brdf> brdf; /**< Pointer to the surface BRDF. */
     unsigned int geom_id;
 

@@ -37,8 +37,8 @@ public:
         }
 
         for (int i = 0; i < lights->size(); i++) {
-            lights_cdf[i + 1] /= lights_cdf[lights_cdf.size() - 1];
             lights_pdf[i] /= lights_cdf[lights_cdf.size() - 1];
+            lights_cdf[i + 1] /= lights_cdf[lights_cdf.size() - 1];
         }
 
     }
@@ -81,8 +81,8 @@ class SpatialPowerStrategie {
             }
 
             for (int i = 0; i < lights->size(); i++) {
-                lights_cdf[i + 1] /= lights_cdf[lights_cdf.size() - 1];
                 lights_pdf[i] /= lights_cdf[lights_cdf.size() - 1];
+                lights_cdf[i + 1] /= lights_cdf[lights_cdf.size() - 1];
             }
         }
 
@@ -198,9 +198,9 @@ public:
             si.brdf = geom->brdf;
             si.pos = r.o + r.d * si.t;
             si.nor = geom->get_normal(rayhit, si.pos);
+            si.uv = geom->get_uv(rayhit, si.pos);
             si.geom_id = geom_id;
-            // si.nor = vec3(rayhit.hit.Ng_x, rayhit.hit.Ng_y, rayhit.hit.Ng_z);
-
+            
             si.finalize();
             return true;
         }
@@ -330,7 +330,7 @@ public:
 
         
         ps = std::make_shared<PowerStrategie>(lights, infinite_lights);
-        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 100);
+        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 500);
 
     }
 

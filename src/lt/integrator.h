@@ -396,6 +396,7 @@ public:
         Spectrum s(0.);
 
         if (scene.intersect(r, si)) {
+
             if (!si.brdf) {
                 r = Ray(si.pos + r.d * 0.00001f, r.d);
                 return render_pixel(r, scene, sampler);

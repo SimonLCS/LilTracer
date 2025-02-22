@@ -130,8 +130,8 @@ public:
         : ShapeInvariantMicrosurface<MICROSURFACE>(type, scale_x, scale_y)
     {
         Brdf::flags = Brdf::Flags::rough | Brdf::Flags::reflection;
-        eta = Spectrum(1.);
-        kappa = Spectrum(10000.);
+        eta = SpectrumTex(Spectrum(1.));
+        kappa = SpectrumTex(Spectrum(10000.));
     }
 
     Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
@@ -141,8 +141,8 @@ public:
     // Return eval / pdf
     Spectrum eval_optim(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
 
-    Spectrum eta;
-    Spectrum kappa;
+    SpectrumTex eta;
+    SpectrumTex kappa;
 };
 
 
@@ -152,7 +152,7 @@ Spectrum RoughShapeInvariantMicrosurface<MICROSURFACE>::eval(vec3 wi, vec3 wo, c
     vec3 wh = glm::normalize(wi + wo);
     Float d = ShapeInvariantMicrosurface<MICROSURFACE>::D(wh);
     Float g = ShapeInvariantMicrosurface<MICROSURFACE>::G2(wh, wi, wo);
-    Spectrum f = fresnelConductor(glm::dot(wh, wi), eta, kappa);
+    Spectrum f = fresnelConductor(glm::dot(wh, wi), eta.eval(si), kappa.eval(si));
     Spectrum brdf = d * g * f / (4.f * glm::clamp(wi[2], 0.0001f, 0.9999f));
     return brdf;
 }
@@ -220,14 +220,14 @@ public:
         : ShapeInvariantMicrosurface<MICROSURFACE>(type, scale_x, scale_y)
     {
         Brdf::flags = Brdf::Flags::diffuse | Brdf::Flags::reflection;
-        albedo = Spectrum(0.5);
+        albedo = SpectrumTex(Spectrum(0.5));
     }
 
     Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
     Brdf::Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler);
     Float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si);
 
-    Spectrum albedo;
+    SpectrumTex albedo;
 };
 
 
@@ -250,7 +250,7 @@ Spectrum DiffuseShapeInvariantMicrosurface<MICROSURFACE>::eval(vec3 wi, vec3 wo,
     Float cos_theta_i = glm::clamp(wi[2], 0.00001f, 0.99999f);
 
     Float brdf = i_dot_m * o_dot_m * d * g / pdf_wh_;
-    return albedo * brdf / cos_theta_i / pi;
+    return albedo.eval(si) * brdf / cos_theta_i / pi;
 }
 
 
