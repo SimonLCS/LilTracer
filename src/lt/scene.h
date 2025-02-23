@@ -327,10 +327,9 @@ public:
                 bbox.grow(geometry->bbox());
             }
         }
-
         
         ps = std::make_shared<PowerStrategie>(lights, infinite_lights);
-        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 500);
+        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 50);
 
     }
 
