@@ -196,10 +196,18 @@ public:
         const std::shared_ptr<Light>& light, Scene& scene,
         Sampler& sampler)
     {
+        bool two_sided = true;
+        bool flip = two_sided && (glm::dot(si.nor,-r.d) < 0.);
 
         Spectrum contrib = vec3(0.);
         
-        si.pos -= r.d * 0.00001f;
+        if (flip) {
+            si.pos += -si.nor * 0.00001f;
+        }
+        else {
+            si.pos +=  si.nor * 0.00001f;
+        }
+
 
         Light::Sample ls = light->sample(si, sampler);
         assert(ls.pdf > 0.);
@@ -208,15 +216,25 @@ public:
         vec3 wo = si.to_local(-ls.direction);
         vec3 wi = si.to_local(-r.d);
         
-        bool two_sided = true;
-        bool flip = two_sided && wi.z < 0.;
         if (flip) {
             wi = -wi;
             wo = -wo;
         }
 
         Ray rs(si.pos,-ls.direction);
+        //SurfaceInteraction si_next;
+        //bool intersect = scene.intersect(rs, si_next);
 
+        //std::cout << light->geometry_id() << std::endl;
+
+        ///return Spectrum(si_next.geom_id, si.geom_id, light->geometry_id());
+        /*if (intersect && light->geometry_id() == si_next.geom_id)
+            return Spectrum(0., 0., 1.);
+        else if (intersect && si.geom_id == si_next.geom_id)
+            return Spectrum(0., 1., 0.);
+        else
+            return Spectrum(1., 0., 0.);*/
+        //if (intersect  ) {
         if (!scene.shadow_to(rs, ls.expected_distance_to_intersection)) {
 
             if (wi.z < 0.00001) {
@@ -231,6 +249,8 @@ public:
                 Float brdf_pdf = si.brdf->pdf(wi, wo, si);
                 assert(brdf_pdf == brdf_pdf);
                 Float weight = power_heuristic(ls.pdf, brdf_pdf);
+                //return Spectrum(weight, brdf_pdf, ls.pdf);
+
                 assert(weight == weight);
                 assert(ls.pdf > 0.0);
                 contrib += weight * brdf_contrib * ls.emission / ls.pdf;
@@ -242,7 +262,7 @@ public:
             #endif
         }
 
-        //return Spectrum(0, 0, 0);
+        //return contrib;
 
         #if defined(USE_MIS)
         if (!light->is_dirac()) {
@@ -251,8 +271,6 @@ public:
             if (wi.z < 0.00001 || bs.wo.z < 0.00001) {
                 return contrib;
             }
-
-            Float weight = 1.0f;
 
             Float light_pdf = light->pdf(si.pos, -si.to_world(bs.wo));
             if (light_pdf == 0) {
@@ -276,7 +294,7 @@ public:
             Spectrum emission = light->eval(si.to_world(bs.wo)); // No difference in light eval between lights at infinity and area lights
             Float brdf_pdf = si.brdf->pdf(wi, bs.wo, si);
             assert(light_pdf != 0 || brdf_pdf != 0);
-            weight = power_heuristic(brdf_pdf, light_pdf);
+            Float weight = power_heuristic(brdf_pdf, light_pdf);
             assert(weight == weight);
             assert(bs.value == bs.value);
             contrib += weight * bs.value * emission;
@@ -405,8 +423,8 @@ public:
             if (si.brdf->is_emissive())
                 return si.brdf->emission();
 
-            s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : sample_one_light(r, si, scene, sampler);
-            //s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : uniform_sample_one_light(r, si, scene, sampler);
+            //s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : sample_one_light(r, si, scene, sampler);
+            s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : uniform_sample_one_light(r, si, scene, sampler);
         } else {
             for (const auto& light : scene.infinite_lights)
                 s += light->eval(r.d);
@@ -457,7 +475,8 @@ public:
                 }
                 
                 // Compute Light contrib
-                s += throughput * uniform_sample_one_light(r, si, scene, sampler);
+                s += throughput * sample_one_light(r, si, scene, sampler);
+                //s += throughput * uniform_sample_one_light(r, si, scene, sampler);
 
                 // Compute BRDF  contrib
                 vec3 wi = si.to_local(-r.d);
@@ -490,6 +509,16 @@ public:
                 // offset si.pos for next bounce
                 vec3 p = si.pos - r.d * 0.00001f;
                 r = Ray(p, si.to_world(bs.wo));
+
+                Spectrum rrBeta = throughput;// *etaScale;
+                Float maxRrBeta = glm::max(rrBeta.x, rrBeta.y, rrBeta.z);
+                Float rrThreshold = 0.2;
+                
+                if (maxRrBeta < rrThreshold && d > 2) {
+                    Float q = std::max((Float).05, 1 - maxRrBeta);
+                    if (sampler.next_float() < q) break;
+                    throughput /= 1 - q;
+                }
 
             }
             else {

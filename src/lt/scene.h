@@ -286,13 +286,30 @@ public:
         rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
 
         rtcIntersect1(scene, &context, &rayhit);
-
         float epsilon = 0.0001;
         if (rayhit.ray.tfar < tfar + epsilon && rayhit.ray.tfar > tfar - epsilon) {
             return false;
         }
-
         return true;
+
+        /*RTCRay ray;
+        ray.org_x = r.o.x;
+        ray.org_y = r.o.y;
+        ray.org_z = r.o.z;
+        ray.dir_x = r.d.x;
+        ray.dir_y = r.d.y;
+        ray.dir_z = r.d.z;
+        ray.tnear = 0.f;
+        ray.tfar = std::numeric_limits<float>::infinity();
+        
+        rtcOccluded1(scene, &context, &ray);
+        const float epsilon = 0.0001;
+        if (ray.tfar < tfar + epsilon && ray.tfar > tfar - epsilon) {
+            return false;
+        }
+        return true;*/
+
+
     }
 
 
@@ -329,7 +346,7 @@ public:
         }
         
         ps = std::make_shared<PowerStrategie>(lights, infinite_lights);
-        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 50);
+        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 500);
 
     }
 

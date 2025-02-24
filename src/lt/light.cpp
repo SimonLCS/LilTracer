@@ -275,9 +275,9 @@ namespace LT_NAMESPACE {
     {
         Sample s;
 
-        vec3 u = rectangle->vertex[1] - rectangle->vertex[0];
-        vec3 v = rectangle->vertex[2] - rectangle->vertex[0];
-        vec3 point_on_surface = rectangle->vertex[0] + u * sampler.next_float() + v * sampler.next_float();
+        vec3 edge1 = rectangle->vertex[1] - rectangle->vertex[0];
+        vec3 edge2 = rectangle->vertex[3] - rectangle->vertex[0];
+        vec3 point_on_surface = rectangle->vertex[0] + edge1 * sampler.next_float() + edge2 * sampler.next_float();
         
         vec3 direction = si.pos - point_on_surface;
         Float distance = glm::length(direction);
