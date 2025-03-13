@@ -16,7 +16,12 @@ void print_progress(int current_sample, int max_sample, float t) {
 
 int main(int argc, char* argv[])
 {   
+#ifdef NDEBUG
+    lt::State::log_level = lt::logWarning;
+#else
     lt::State::log_level = lt::logDebug;
+#endif // NDEBUG
+
     for (int a = 1; a < argc; a++) {
 
         lt::Renderer ren;

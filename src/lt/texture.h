@@ -36,69 +36,11 @@ struct Texture {
         mean = value;
     }
 
-    /*
-    Texture(const Texture& src) :
-        w(src.w),
-        h(src.h),
-        mean(src.mean)
-    {
-        initialize();
-
-        for (int i = 0; i < src.w * src.h; ++i) {
-            data[i] = src.data[i];
-        }
-    }
-
-    Texture(Texture&& o) :
-        w(std::move(o.w)),      
-        h(std::move(o.h)),      
-        mean(std::move(o.mean))
-    {
-        if (data){
-            delete[] data;
-            data = nullptr;
-        }
-        data = o.data;
-    }
-    
-    Texture& operator=(const Texture& rhs) {
-        if (&rhs != this) {
-            Texture temp(rhs); // copies the array
-            temp.swap(*this);
-        }
-        return *this;
-    }
-
-    Texture& operator=(Texture&& rhs) {
-        Texture temp(std::move(rhs));
-        temp.swap(*this);
-        return *this;
-    }
-    void swap(Texture& other) {
-        // swap the array pointers...
-        std::swap(data, other.data);
-        std::swap(w, other.w);
-        std::swap(h, other.h);
-        std::swap(mean, other.mean);
-    }
-    */
-
     ~Texture() { 
-        /*if (data) {
-            delete[] data;
-            data = nullptr;
-        }*/
     }
 
     void initialize()
     {
-        //if (data) {
-        //    delete[] data;
-        //    data = nullptr;
-        //}
-        // 
-        //data = new DATA_TYPE[w * h]();
-        
         data.reset();
         data = std::make_shared<DATA_TYPE[]>(w * h);
     }
@@ -135,6 +77,27 @@ struct Texture {
 
 typedef Texture<Float> FloatTex;
 using SpectrumTex = Texture<Spectrum>;
+
+
+struct DustTexture : Texture<Float>
+{
+    DustTexture(const Float& v) { mean = v; }
+
+    void set(const size_t& x, const size_t& y, const Float& s){}
+    void update_mean() {}
+
+    Float get(const size_t& x, const size_t& y) { return mean; }
+
+    Float eval(const SurfaceInteraction& si)
+    {
+        return glm::clamp(si.nor.z,0.f,1.f);
+    }
+
+    Float eval(const Float& u, const Float& v)
+    {
+        return mean;
+    }
+};
 
 
 } // namespace LT_NAMESPACE
