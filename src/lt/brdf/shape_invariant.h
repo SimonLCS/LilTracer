@@ -130,47 +130,47 @@ public:
         : ShapeInvariantMicrosurface<MICROSURFACE>(type, scale_x, scale_y)
     {
         Brdf::flags = Brdf::Flags::rough | Brdf::Flags::reflection;
-        eta = Spectrum(1.);
-        kappa = Spectrum(10000.);
+        eta = SpectrumTex(Spectrum(1.));
+        kappa = SpectrumTex(Spectrum(10000.));
     }
 
-    Spectrum eval(vec3 wi, vec3 wo, Sampler& sampler);
-    Brdf::Sample sample(const vec3& wi, Sampler& sampler);
-    Float pdf(const vec3& wi, const vec3& wo);
+    Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
+    Brdf::Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler);
+    Float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si);
 
     // Return eval / pdf
-    Spectrum eval_optim(vec3 wi, vec3 wo, Sampler& sampler);
+    Spectrum eval_optim(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
 
-    Spectrum eta;
-    Spectrum kappa;
+    SpectrumTex eta;
+    SpectrumTex kappa;
 };
 
 
 template <class MICROSURFACE>
-Spectrum RoughShapeInvariantMicrosurface<MICROSURFACE>::eval(vec3 wi, vec3 wo, Sampler& sampler)
+Spectrum RoughShapeInvariantMicrosurface<MICROSURFACE>::eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler)
 {
     vec3 wh = glm::normalize(wi + wo);
     Float d = ShapeInvariantMicrosurface<MICROSURFACE>::D(wh);
     Float g = ShapeInvariantMicrosurface<MICROSURFACE>::G2(wh, wi, wo);
-    Spectrum f = fresnelConductor(glm::dot(wh, wi), eta, kappa);
+    Spectrum f = fresnelConductor(glm::dot(wh, wi), eta.eval(si), kappa.eval(si));
     Spectrum brdf = d * g * f / (4.f * glm::clamp(wi[2], 0.0001f, 0.9999f));
     return brdf;
 }
 
 template <class MICROSURFACE>
-Spectrum RoughShapeInvariantMicrosurface<MICROSURFACE>::eval_optim(vec3 wi, vec3 wo, Sampler& sampler)
+Spectrum RoughShapeInvariantMicrosurface<MICROSURFACE>::eval_optim(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler)
 {
-    if (ShapeInvariantMicrosurface<MICROSURFACE>::optimize) {
+    /*if (ShapeInvariantMicrosurface<MICROSURFACE>::optimize) {
         return ShapeInvariantMicrosurface<MICROSURFACE>::sample_visible_distribution
             ? eval(wi, wo, sampler) / pdf(wi, wo)
             : eval(wi, wo, sampler) / pdf(wi, wo);
-    }
-    return eval(wi, wo, sampler) / pdf(wi, wo);
+    }*/
+    return eval(wi, wo, si, sampler) / pdf(wi, wo, si);
 }
 
 
 template <class MICROSURFACE>
-Brdf::Sample RoughShapeInvariantMicrosurface<MICROSURFACE>::sample(const vec3& wi, Sampler& sampler)
+Brdf::Sample RoughShapeInvariantMicrosurface<MICROSURFACE>::sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler)
 {
     Brdf::Sample bs;
 
@@ -182,7 +182,7 @@ Brdf::Sample RoughShapeInvariantMicrosurface<MICROSURFACE>::sample(const vec3& w
     //bs.wo = wh;
 
 
-    bs.value = eval_optim(wi, bs.wo, sampler);
+    bs.value = eval_optim(wi, bs.wo, si, sampler);
 
     //Float g = sample_visible_distribution ? G2(wh,wi, bs.wo)  / G1(wh,bs.wo) : G1(wh, wi) * G1(wh, bs.wo) * glm::dot(wi, wh) / (glm::clamp(wi[2], 0.0001f, 0.9999f) * glm::clamp(wh[2], 0.0001f, 0.9999f));
     //bs.value = F * e;
@@ -191,7 +191,7 @@ Brdf::Sample RoughShapeInvariantMicrosurface<MICROSURFACE>::sample(const vec3& w
 }
 
 template <class MICROSURFACE>
-Float RoughShapeInvariantMicrosurface<MICROSURFACE>::pdf(const vec3& wi, const vec3& wo)
+Float RoughShapeInvariantMicrosurface<MICROSURFACE>::pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si)
 {
 
     //Float pdf_wh_ = ShapeInvariantMicrosurface<MICROSURFACE>::sample_visible_distribution
@@ -220,19 +220,19 @@ public:
         : ShapeInvariantMicrosurface<MICROSURFACE>(type, scale_x, scale_y)
     {
         Brdf::flags = Brdf::Flags::diffuse | Brdf::Flags::reflection;
-        albedo = Spectrum(0.5);
+        albedo = SpectrumTex(Spectrum(0.5));
     }
 
-    Spectrum eval(vec3 wi, vec3 wo, Sampler& sampler);
-    Brdf::Sample sample(const vec3& wi, Sampler& sampler);
-    Float pdf(const vec3& wi, const vec3& wo);
+    Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
+    Brdf::Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler);
+    Float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si);
 
-    Spectrum albedo;
+    SpectrumTex albedo;
 };
 
 
 template <class MICROSURFACE>
-Spectrum DiffuseShapeInvariantMicrosurface<MICROSURFACE>::eval(vec3 wi, vec3 wo, Sampler& sampler)
+Spectrum DiffuseShapeInvariantMicrosurface<MICROSURFACE>::eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler)
 {
     vec3 wh = ShapeInvariantMicrosurface<MICROSURFACE>::sample_visible_distribution
         ? ShapeInvariantMicrosurface<MICROSURFACE>::sample_D(wi, sampler)
@@ -250,23 +250,23 @@ Spectrum DiffuseShapeInvariantMicrosurface<MICROSURFACE>::eval(vec3 wi, vec3 wo,
     Float cos_theta_i = glm::clamp(wi[2], 0.00001f, 0.99999f);
 
     Float brdf = i_dot_m * o_dot_m * d * g / pdf_wh_;
-    return albedo * brdf / cos_theta_i / pi;
+    return albedo.eval(si) * brdf / cos_theta_i / pi;
 }
 
 
 template <class MICROSURFACE>
-Brdf::Sample DiffuseShapeInvariantMicrosurface<MICROSURFACE>::sample(const vec3& wi, Sampler& sampler)
+Brdf::Sample DiffuseShapeInvariantMicrosurface<MICROSURFACE>::sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler)
 {
     Brdf::Sample bs;
 
     bs.wo = square_to_cosine_hemisphere(sampler.next_float(), sampler.next_float());
-    bs.value = eval(wi, bs.wo, sampler) / ShapeInvariantMicrosurface<MICROSURFACE>::pdf(wi, bs.wo);
+    bs.value = eval(wi, bs.wo, si, sampler) / ShapeInvariantMicrosurface<MICROSURFACE>::pdf(wi, bs.wo, si);
 
     return bs;
 }
 
 template <class MICROSURFACE>
-Float DiffuseShapeInvariantMicrosurface<MICROSURFACE>::pdf(const vec3& wi, const vec3& wo)
+Float DiffuseShapeInvariantMicrosurface<MICROSURFACE>::pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si)
 {
     return square_to_cosine_hemisphere_pdf(wo);
 }

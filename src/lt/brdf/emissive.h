@@ -12,10 +12,11 @@ namespace LT_NAMESPACE {
 
 class Emissive : public Brdf {
 public:
-    PARAMETER(Spectrum, intensity, 1.); /**< Intensity of emission. */
+    SpectrumTex intensity; /**< Intensity of emission. */
 
     Emissive()
         : Brdf("Emissive")
+        , intensity(Spectrum(1.))
     {
         flags = Flags::emissive;
         link_params();

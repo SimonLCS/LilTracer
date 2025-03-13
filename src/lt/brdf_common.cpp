@@ -18,11 +18,9 @@ namespace LT_NAMESPACE {
             { "DiffuseGGX", std::make_shared<DiffuseGGX> },
             { "DiffuseMicrograin", std::make_shared<DiffuseMicrograin> },
             { "RoughGGX", std::make_shared<RoughGGX> },
-            { "RoughGGXRetro", std::make_shared<RoughGGXRetro> },
             { "RoughBeckmann", std::make_shared<RoughBeckmann> },
             { "RoughMicrograin", std::make_shared<RoughMicrograin> },
-            { "Mix", std::make_shared<Mix> },
-            { "TestBrdf", std::make_shared<TestBrdf> }
+            { "Mix", std::make_shared<Mix> }
         };
         return registry;
     }

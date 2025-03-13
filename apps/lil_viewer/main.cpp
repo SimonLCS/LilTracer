@@ -434,11 +434,12 @@ void brdf_slice(std::shared_ptr<lt::Brdf> brdf, float th_i, float ph_i, std::sha
     std::vector<float> th = lt::linspace<float>(0, 0.5 * lt::pi, sensor->h);
     std::vector<float> ph = lt::linspace<float>(0, 2. * lt::pi, sensor->w);
 
+    lt::SurfaceInteraction si;
     lt::vec3 wi = lt::polar_to_card(th_i, ph_i);
     for (int x = 0; x < sensor->w; x++) {
         for (int y = 0; y < sensor->h; y++) {
             lt::vec3 wo = lt::polar_to_card(th[y], ph[x]);
-            sensor->value[y * sensor->w + x] = brdf->eval(wi, wo, sampler);
+            sensor->value[y * sensor->w + x] = brdf->eval(wi, wo, si, sampler);
         }
     }
 }
@@ -497,6 +498,7 @@ static void tab_brdf_slice(AppData& app_data, bool& open) {
 }
 
 static void tab_brdf_plot(AppData& app_data, bool& open) {
+    lt::SurfaceInteraction si;
     if (ImGui::BeginTabBar("##TabsPolar", ImGuiTabBarFlags_None))
     {
 
@@ -520,7 +522,7 @@ static void tab_brdf_plot(AppData& app_data, bool& open) {
                         static float ys[1001];
                         for (int x = 0; x < 1001; x++) {
                             lt::vec3 wo = lt::polar_to_card(th[x], 0.);
-                            lt::vec3 rgb = brdf->eval(wi, wo, app_data.sampler);
+                            lt::vec3 rgb = brdf->eval(wi, wo, si, app_data.sampler);
                             float l = (rgb.x + rgb.y + rgb.z) / 3.;
                             xs[x] = -wo.x * l;
                             ys[x] = wo.z * l;
@@ -540,7 +542,7 @@ static void tab_brdf_plot(AppData& app_data, bool& open) {
                     lt::vec3 rgb[1001];
                     for (int x = 0; x < 1001; x++) {
                         lt::vec3 wo = lt::polar_to_card(th[x], 0.);
-                        rgb[x] = app_data.brdfs[app_data.current_brdf_idx]->eval(wi, wo, app_data.sampler);
+                        rgb[x] = app_data.brdfs[app_data.current_brdf_idx]->eval(wi, wo, si, app_data.sampler);
                     }
 
                     const char* col_name[3] = { "r", "g", "b" };
@@ -584,7 +586,7 @@ static void tab_brdf_plot(AppData& app_data, bool& open) {
                         for (int x = 0; x < 1001; x++) {
                             lt::vec3 wi = lt::polar_to_card(app_data.theta_i, app_data.phi_i);
                             lt::vec3 wo = lt::polar_to_card(th[x], 0.);
-                            lt::vec3 rgb = brdf->eval(wi, wo, app_data.sampler);
+                            lt::vec3 rgb = brdf->eval(wi, wo, si, app_data.sampler);
                             xs[x] = (rgb.x + rgb.y + rgb.z) / 3.;
 
                         }
@@ -604,7 +606,7 @@ static void tab_brdf_plot(AppData& app_data, bool& open) {
                     for (int x = 0; x < 1001; x++) {
                         lt::vec3 wi = lt::polar_to_card(app_data.theta_i, app_data.phi_i);
                         lt::vec3 wo = lt::polar_to_card(th[x], 0.);
-                        lt::vec3 rgb = app_data.brdfs[app_data.current_brdf_idx]->eval(wi, wo, app_data.sampler);
+                        lt::vec3 rgb = app_data.brdfs[app_data.current_brdf_idx]->eval(wi, wo, si, app_data.sampler);
                         r[x] = rgb.x;
                         g[x] = rgb.y;
                         b[x] = rgb.z;
@@ -631,11 +633,12 @@ static void tab_brdf_plot(AppData& app_data, bool& open) {
 }
 
 static void tab_brdf_sampling(AppData& app_data, bool& open) {
+    lt::SurfaceInteraction si;
     lt::vec3 wi = lt::polar_to_card(app_data.theta_i, app_data.phi_i);
 
 
     for (int i = 0; i < 10000; i++) {
-        lt::vec3 wo = app_data.brdfs[app_data.current_brdf_idx]->sample(wi, app_data.sampler).wo;
+        lt::vec3 wo = app_data.brdfs[app_data.current_brdf_idx]->sample(wi, si, app_data.sampler).wo;
         float phi = std::atan2(wo.y, wo.x);
         phi = phi < 0 ? 2 * lt::pi + phi : phi;
         float x = phi / (2. * lt::pi) * (float)app_data.s_brdf_sampling->w;
@@ -655,7 +658,7 @@ static void tab_brdf_sampling(AppData& app_data, bool& open) {
         int y = int(std::acos(wo.z) / (0.5 * lt::pi) * (float)app_data.s_brdf_sampling->h);
 
         if (y < app_data.s_brdf_sampling->h) {
-            app_data.s_brdf_sampling_pdf->add(x, y, lt::Spectrum(app_data.brdfs[app_data.current_brdf_idx]->pdf(wi, wo)));
+            app_data.s_brdf_sampling_pdf->add(x, y, lt::Spectrum(app_data.brdfs[app_data.current_brdf_idx]->pdf(wi, wo, si)));
             app_data.s_brdf_sampling_diff->set(x, y, (app_data.s_brdf_sampling_pdf->get(x, y) - app_data.s_brdf_sampling->get(x, y)));
         }
         else {

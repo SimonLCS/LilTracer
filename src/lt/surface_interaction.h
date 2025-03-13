@@ -5,10 +5,13 @@
 
 #pragma once
 
-#include <lt/brdf_common.h>
+//#include <lt/brdf_common.h>
+#include <lt/brdf/brdf.h>
 #include <lt/lt_common.h>
 
 namespace LT_NAMESPACE {
+
+class Brdf;
 
 class SurfaceInteraction {
 public:
@@ -21,8 +24,7 @@ public:
         : nor(vec3(0.))
         , pos(vec3(0.))
         , t(1000000.)
-        , u(0.)
-        , v(0.)
+        , uv(0.)
         , brdf(nullptr)
     {
     }
@@ -38,16 +40,14 @@ public:
         : nor(nor)
         , pos(pos)
         , t(1000000.)
-        , u(0.)
-        , v(0.)
+        , uv(0.)
         , brdf(nullptr)
     {
     }
     vec3 nor; /**< Normal at the intersection point. */
     vec3 pos; /**< Position of the intersection point. */
     Float t; /**< Distance to the intersection point. */
-    Float u;
-    Float v;
+    vec2 uv;
     std::shared_ptr<Brdf> brdf; /**< Pointer to the surface BRDF. */
     unsigned int geom_id;
 
@@ -55,6 +55,7 @@ public:
     glm::mat3 inv_tbn; /**< Inverse Tangent-Bitangent-Normal matrix. */
     vec3 tan; /**< Tangent vector. */
     vec3 bitan; /**< Bitangent vector. */
+
 
     /**
      * @brief Finalizes the surface interaction after the setting normal and
@@ -73,7 +74,9 @@ public:
      * @param v The vector to transform.
      * @return The transformed vector in world space.
      */
-    vec3 to_world(const vec3& v) { return tbn * v; }
+    vec3 to_world(const vec3& v) {
+        return tbn * v;
+    }
 
     /**
      * @brief Transforms a vector from world space to local space.
@@ -81,7 +84,10 @@ public:
      * @param v The vector to transform.
      * @return The transformed vector in local space.
      */
-    vec3 to_local(const vec3& v) { return inv_tbn * v; }
+    vec3 to_local(const vec3& v) {
+        return inv_tbn * v;
+    }
 };
+
 
 } // namespace LT_NAMESPACE

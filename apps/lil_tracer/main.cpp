@@ -4,18 +4,19 @@
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
 
-void print_progress(double percentage, float t) {
+void print_progress(int current_sample, int max_sample, float t) {
+    float percentage = double(current_sample) / double(max_sample - 1.0);
     int val = (int)(percentage * 100);
     int lpad = (int)(percentage * PBWIDTH);
     int rpad = PBWIDTH - lpad;
     printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-    printf("\t%f (ms)", t);
+    printf("\t%d/%d %f (ms)",current_sample, max_sample, t);
     fflush(stdout);
 }
 
 int main(int argc, char* argv[])
 {   
-    lt::State::log_level = lt::logWarning;
+    lt::State::log_level = lt::logDebug;
     for (int a = 1; a < argc; a++) {
 
         lt::Renderer ren;
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
 
             time += t;
 
-            print_progress(double(s) / double(ren.max_sample - 1.0), t);
+            print_progress(s,ren.max_sample, t);
         }
 
         std::cout << "\nTime elapsed : " << time << " (ms) " << std::endl;

@@ -41,6 +41,7 @@ namespace LT_NAMESPACE {
         static BrdfValidation validate(Brdf& brdf) {
             Log(logInfo) << "validate " << brdf.type;// << std::endl;
 
+            SurfaceInteraction si;
             BrdfValidation validation;
             validation.directional_albedo.resize(number_of_theta);
             validation.sampling_difference.resize(number_of_theta);
@@ -89,7 +90,7 @@ namespace LT_NAMESPACE {
 
                 //Validate the energy
                 for (int j = 0; j < number_of_sample; j++) {
-                    Brdf::Sample sample = brdf.sample(wi, sampler);
+                    Brdf::Sample sample = brdf.sample(wi, si, sampler);
                     vec3 wo = sample.wo;
                     float phi = std::atan2(wo.y, wo.x);
                     phi = phi < 0 ? 2 * lt::pi + phi : phi;
@@ -119,7 +120,7 @@ namespace LT_NAMESPACE {
                     int y = int(std::acos(wo.z) / (0.5 * lt::pi) * (float)res_theta_sampling);
 
                     if (y < res_theta_sampling) {
-                        pdf_buf.add(x, y, lt::Spectrum(brdf.pdf(wi, wo)));
+                        pdf_buf.add(x, y, lt::Spectrum(brdf.pdf(wi, wo, si)));
                         diff_buf.set(x, y, (pdf_buf.get(x, y) - accu_buf.get(x, y)));
                     }
                     else {

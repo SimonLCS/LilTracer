@@ -40,6 +40,16 @@ namespace LT_NAMESPACE {
         return 0.;
     }
 
+    Float DirectionnalLight::power()
+    {
+        return intensity;
+    }
+
+    Float DirectionnalLight::distance(const vec3& p)
+    {
+        return 1;
+    }
+
     void EnvironmentLight::init()
     {
         dtheta = pi / (Float)envmap.h;
@@ -47,9 +57,10 @@ namespace LT_NAMESPACE {
 
         compute_density();
         c = std::vector<float>(
-            cumulative_density.data,
-            cumulative_density.data + cumulative_density.w * cumulative_density.h);
+            cumulative_density.data.get(),
+            cumulative_density.data.get() + cumulative_density.w * cumulative_density.h);
         c.insert(c.begin(), 0.);
+
     }
 
     Light::Sample EnvironmentLight::sample(const SurfaceInteraction& si, Sampler& sampler)
@@ -128,6 +139,16 @@ namespace LT_NAMESPACE {
         return density.eval(u, v) / solid_angle;
     }
 
+    Float EnvironmentLight::power()
+    {
+        return power_;
+    }
+
+    Float EnvironmentLight::distance(const vec3& p)
+    {
+        return 1;
+    }
+
     void EnvironmentLight::compute_density()
     {
         // Compute density
@@ -155,6 +176,8 @@ namespace LT_NAMESPACE {
             cumulative_density.data[n] = cumulative_density.data[n - 1] + density.data[n];
         }
 
+        power_ = cumulative_density.data[envmap.w * envmap.h - 1] * intensity;
+
         // Normalize density
         for (int n = 0; n < envmap.w * envmap.h; n++) {
             density.data[n] /= cumulative_density.data[envmap.w * envmap.h - 1];
@@ -168,7 +191,7 @@ namespace LT_NAMESPACE {
         std::vector<Float> u = linspace<Float>(0.,1., envmap.w * envmap.h, true);
         
         for (int n = 0; n < envmap.w * envmap.h; n++) {
-            int idx = binary_search<Float>(cumulative_density.data, u[n], envmap.w* envmap.h);
+            int idx = binary_search<Float>(cumulative_density.data.get(), u[n], envmap.w* envmap.h);
             inv_cumulative_density.data[n] = idx;
         }
 
@@ -236,5 +259,56 @@ namespace LT_NAMESPACE {
         return 1. / solid_angle;
     }
 
+    Float SphereLight::power()
+    {
+        Spectrum em = sphere->brdf->emission();
+        return 4. * pi * sphere->rad * sphere->rad * (em.r + em.g + em.b) * 0.33333333;
+    }
+
+    Float SphereLight::distance(const vec3& p)
+    {
+        return glm::distance(p,sphere->pos);
+    }
+
+
+    Light::Sample RectangleLight::sample(const SurfaceInteraction& si, Sampler& sampler)
+    {
+        Sample s;
+
+        vec3 edge1 = rectangle->vertex[1] - rectangle->vertex[0];
+        vec3 edge2 = rectangle->vertex[3] - rectangle->vertex[0];
+        vec3 point_on_surface = rectangle->vertex[0] + edge1 * sampler.next_float() + edge2 * sampler.next_float();
+        
+        vec3 direction = si.pos - point_on_surface;
+        Float distance = glm::length(direction);
+        direction /= distance;
+
+        Float light_cosine = std::abs(glm::dot(rectangle->normal[0], -direction));
+        Float light_area = 4. * glm::determinant(rectangle->local_to_world);
+
+        s.direction = direction;
+        s.pdf = distance * distance / (light_area * light_cosine);
+        s.expected_distance_to_intersection = distance;
+        s.emission = rectangle->brdf->emission();
+        return s;
+    }
+
+    Spectrum RectangleLight::eval(const vec3& direction) { return rectangle->brdf->emission(); }
+
+    Float RectangleLight::pdf(const vec3& p, const vec3& ld)
+    {
+        return 1. / (4. * glm::determinant(rectangle->local_to_world));
+    }
+
+    Float RectangleLight::power()
+    {
+        Spectrum em = rectangle->brdf->emission();
+        return 4. * glm::determinant(rectangle->local_to_world) * (em.r + em.g + em.b) * 0.33333333;
+    }
+
+    Float RectangleLight::distance(const vec3& p)
+    {
+        return glm::distance(p, (rectangle->vertex[0] + rectangle->vertex[2]) * 0.5f);
+    }
 
 } // namespace LT_NAMESPACE
