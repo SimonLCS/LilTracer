@@ -512,12 +512,17 @@ public:
 
                 Spectrum rrBeta = throughput;// *etaScale;
                 Float maxRrBeta = glm::max(rrBeta.x, rrBeta.y, rrBeta.z);
-                Float rrThreshold = 0.2;
+                const Float rrThreshold = 0.2;
+
+                if (maxRrBeta < 0.000001)
+                    return s;
+
                 
                 if (maxRrBeta < rrThreshold && d > 2) {
                     Float q = std::max((Float).05, 1 - maxRrBeta);
                     if (sampler.next_float() < q) break;
                     throughput /= 1 - q;
+                    assert(throughput == throughput);
                 }
 
             }
