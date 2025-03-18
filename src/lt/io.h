@@ -34,6 +34,18 @@ static void json_set_bool(const json& j, bool* ptr) { *ptr = (bool)j; }
  */
 static void json_set_float(const json& j, float* ptr) { *ptr = j; }
 
+static void json_set_float_tex(const json& j, std::shared_ptr<FloatTex>* ptr, const std::string& dir)
+{
+    if (j.is_string()) {
+        std::string texture_path = dir + std::string(j);
+        if (load_texture(texture_path, *ptr) != 0)
+            Log(logError) << texture_path << " : cannot be loaded. ";
+    }
+    else {
+        *ptr = std::make_shared<FloatTex>(j);
+    }
+}
+
 /**
  * @brief Set a int value from JSON.
  * @param j The JSON value.
@@ -116,15 +128,16 @@ static void json_set_mat4(const json& j, glm::mat4* ptr)
  * @param j The JSON value.
  * @param ptr Pointer to the vec3 variable.
  */
-static void json_set_spectrum(const json& j, SpectrumTex& ptr, const std::string& dir)
+static void json_set_spectrum(const json& j, std::shared_ptr<SpectrumTex>* ptr, const std::string& dir)
 {
     if (j.is_string()) {
         std::string texture_path = dir + std::string(j);
-        if (load_texture(texture_path, ptr) != 0)
+        if (load_texture(texture_path, *ptr) != 0)
             Log(logError) << texture_path << " : cannot be loaded. ";
     }
     else {
-        ptr = SpectrumTex(Spectrum(j[0], j[1], j[2]));
+        std::shared_ptr<SpectrumTex> tex = std::make_shared<SpectrumTex>(Spectrum(j[0], j[1], j[2]));
+        *ptr = tex;
     }
 }
 
@@ -157,7 +170,7 @@ static void json_set_brdf(const json& j, std::shared_ptr<Brdf>* ptr,
     }
 }
 
-static void json_set_texture(const json& j, Texture<Spectrum>* ptr, const std::string& dir)
+static void json_set_texture(const json& j, std::shared_ptr<SpectrumTex>* ptr, const std::string& dir)
 {
     std::string texture_path = dir + std::string(j);
     if (load_texture(texture_path, *ptr))
@@ -183,15 +196,19 @@ static void set_params(const json& j, const Params& params, const std::string& d
             case ParamType::FLOAT:
                 json_set_float(j[p.name], (float*)p.ptr);
                 break;
+            case ParamType::FLOAT_TEX:
+                json_set_float_tex(j[p.name], (std::shared_ptr<FloatTex>*)p.ptr, dir);
+                break;
             case ParamType::INT:
                 json_set_int(j[p.name], (int*)p.ptr);
                 break;
             case ParamType::VEC3:
+            case ParamType::IOR:
+            case ParamType::RGB:
                 json_set_vec3(j[p.name], (vec3*)p.ptr);
                 break;
-            case ParamType::RGB:
-            case ParamType::IOR:
-                json_set_spectrum(j[p.name], *(SpectrumTex*)p.ptr, dir);
+            case ParamType::SPECTRUM_TEX :
+                json_set_spectrum(j[p.name], (std::shared_ptr<SpectrumTex>*)p.ptr, dir);
                 break;
             case ParamType::PATH:
                 json_set_path(j[p.name], (std::string*)p.ptr, dir);
@@ -201,8 +218,7 @@ static void set_params(const json& j, const Params& params, const std::string& d
                     (std::shared_ptr<Brdf>*)p.ptr, brdf_ref);
                 break;
             case ParamType::TEXTURE:
-                json_set_texture(j[p.name],
-                    (Texture<Spectrum>*)p.ptr, dir);
+                json_set_texture(j[p.name], (std::shared_ptr<SpectrumTex>*)p.ptr, dir);
                 break;
             case ParamType::MAT4:
                 json_set_mat4(j[p.name], (glm::mat4*)p.ptr);

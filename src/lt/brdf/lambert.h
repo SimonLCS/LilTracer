@@ -16,9 +16,9 @@ namespace LT_NAMESPACE {
  */
 class Diffuse : public Brdf {
 public:
-    SpectrumTex albedo; /**< Albedo of the surface. */
+    std::shared_ptr<SpectrumTex> albedo; /**< Albedo of the surface. */
 
-    Diffuse(const SpectrumTex& kd = SpectrumTex(Spectrum(0.5)))
+    Diffuse(std::shared_ptr<SpectrumTex> kd)
         : Brdf("Diffuse")
         , albedo(kd)
     {
@@ -26,12 +26,21 @@ public:
         link_params();
     }
 
+    Diffuse(const Spectrum& kd = Spectrum(0.5))
+        : Brdf("Diffuse")
+        , albedo(std::make_shared<SpectrumTex>(kd))
+    {
+        flags = Flags::diffuse | Flags::reflection;
+        link_params();
+    }
+
+
     Spectrum eval(vec3 wi, vec3 wo, const SurfaceInteraction& si, Sampler& sampler);
     Sample sample(const vec3& wi, const SurfaceInteraction& si, Sampler& sampler);
     float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si);
 
 protected:
-    void link_params() { params.add("albedo", ParamType::RGB, &albedo); }
+    void link_params() { params.add("albedo", ParamType::SPECTRUM_TEX, &albedo); }
 };
 
 } // namespace LT_NAMESPACE

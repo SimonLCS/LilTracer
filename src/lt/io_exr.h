@@ -47,7 +47,7 @@ static TextureExt get_texture_extension(const std::string& path) {
 }
 
 
-static int load_texture_ldr(const std::string& filename, Texture<Spectrum>& t) {
+static int load_texture_ldr(const std::string& filename, std::shared_ptr<SpectrumTex>& t) {
     int width;
     int height;
     int channels;
@@ -60,9 +60,9 @@ static int load_texture_ldr(const std::string& filename, Texture<Spectrum>& t) {
         return -1;
     }
 
-    t.w = (size_t)width;
-    t.h = (size_t)height;
-    t.initialize();
+    t->w = (size_t)width;
+    t->h = (size_t)height;
+    t->initialize();
 
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
@@ -70,17 +70,17 @@ static int load_texture_ldr(const std::string& filename, Texture<Spectrum>& t) {
             float r = float(img[i]) / 255.f;
             float g = float(img[i+1]) / 255.f;
             float b = float(img[i+2]) / 255.f;
-            t.set(x, y, glm::pow(vec3(r, g, b),vec3(2.2)) );
+            t->set(x, y, glm::pow(vec3(r, g, b),vec3(2.2)) );
         }
     }
-    t.update_mean();
+    t->update_mean();
 
     stbi_image_free(img);
 
     return 0;
 }
 
-static int load_texture_exr(const std::string& filename, Texture<Spectrum>& t)
+static int load_texture_exr(const std::string& filename, std::shared_ptr<SpectrumTex>& t)
 {
     float* out;
     int width;
@@ -92,17 +92,17 @@ static int load_texture_exr(const std::string& filename, Texture<Spectrum>& t)
         return ret;
     }
 
-    t.w = (size_t)width;
-    t.h = (size_t)height;
-    t.initialize();
+    t->w = (size_t)width;
+    t->h = (size_t)height;
+    t->initialize();
 
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
             int i = 4 * (y * width + x);
-            t.set(x, y, Spectrum(out[i], out[i + 1], out[i + 2]));
+            t->set(x, y, Spectrum(out[i], out[i + 1], out[i + 2]));
         }
     }
-    t.update_mean();
+    t->update_mean();
 
     delete[] out;
 
@@ -110,7 +110,17 @@ static int load_texture_exr(const std::string& filename, Texture<Spectrum>& t)
 };
 
 
-static int load_texture(const std::string& path, Texture<Spectrum>& t) {
+static int load_texture(const std::string& path, std::shared_ptr<FloatTex>& t) {
+    if (true) {
+        t = std::make_shared<DustTex>(0.5);
+        return 0;
+    }
+    return -1;
+}
+
+
+
+static int load_texture(const std::string& path, std::shared_ptr<SpectrumTex>& t) {
 
     switch (get_texture_extension(path))
     {

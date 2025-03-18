@@ -3,50 +3,52 @@
 
 namespace LT_NAMESPACE {
 
-    Float MicrograinMicrosurface::one_to_many(const Float& sigma_) {
+    Float MicrograinMicrosurface::one_to_many(const Float& tau_0, const Float& sigma_) {
         Float rho = -std::log(1 - tau_0) / pi;
         return  std::exp(-rho * sigma_);
     }
 
-    Float MicrograinMicrosurface::tau_v(const vec3& wi_u) {
-        return 1 - one_to_many(sigma(wi_u));
+    Float MicrograinMicrosurface::tau_v(const Float& tau_0, const vec3& wi_u) {
+        return 1 - one_to_many(tau_0, sigma(wi_u));
     }
 
-    Float MicrograinMicrosurface::D(const vec3& wh_u) {
-        Float rho = -std::log(1 - tau_0) / pi;
-        float D_ = rho * one_to_many(sigma_base(wh_u)) / (tau_0);
+    Float MicrograinMicrosurface::D(const vec3& wh_u, const SurfaceInteraction& si) {
+        Float tau = tau_0->eval(si);
+        Float rho = -std::log(1 - tau) / pi;
+        float D_ = rho * one_to_many(tau, sigma_base(wh_u)) / (tau);
         return D_;
     }
 
-    Float MicrograinMicrosurface::D(const vec3& wh_u, const vec3& wi_u) {
+    Float MicrograinMicrosurface::D(const vec3& wh_u, const vec3& wi_u, const SurfaceInteraction& si) {
         return 0.;
     }
 
-    Float MicrograinMicrosurface::pdf(const vec3& wh_u)
+    Float MicrograinMicrosurface::pdf(const vec3& wh_u, const SurfaceInteraction& si)
     {
-        return D(wh_u) * wh_u.z;
+        return D(wh_u, si) * wh_u.z;
     }
-    Float MicrograinMicrosurface::pdf(const vec3& wh_u, const vec3& wi_u) {
-        return D(wh_u, wi_u);
+    Float MicrograinMicrosurface::pdf(const vec3& wh_u, const vec3& wi_u, const SurfaceInteraction& si) {
+        return D(wh_u, wi_u, si);
     }
 
-    vec3 MicrograinMicrosurface::sample_D(Sampler& sampler)
+    vec3 MicrograinMicrosurface::sample_D(Sampler& sampler, const SurfaceInteraction& si)
     {
+        Float tau = tau_0->eval(si);
         float u = sampler.next_float();
         // warp the uniform distribution based on the filling factor
-        float v = std::log(1. - u * tau_0) / std::log(1. - tau_0);
+        float v = std::log(1. - u * tau) / std::log(1. - tau);
 
         return square_to_cosine_hemisphere(v, sampler.next_float());
     }
 
 
 
-    vec3 MicrograinMicrosurface::sample_D(const vec3& wi_u, Sampler& sampler)
+    vec3 MicrograinMicrosurface::sample_D(const vec3& wi_u, Sampler& sampler, const SurfaceInteraction& si)
     {   
         return vec3(0.,0.,0.);
     }
 
-    Float MicrograinMicrosurface::lambda(const vec3& wi_u)
+    Float MicrograinMicrosurface::lambda(const Float& tau_0, const vec3& wi_u)
     {
         constexpr Float beta = 1.;
         constexpr Float beta2 = 1.;
@@ -94,7 +96,7 @@ namespace LT_NAMESPACE {
         return pi * 0.5 * (1. + 1. / glm::clamp(wi_u.z,0.00001f,0.99999f));
     }
     
-    Float MicrograinMicrosurface::w_plus(const vec3& wi_u, const vec3& wo_u) {
+    Float MicrograinMicrosurface::w_plus(const Float& tau_0, const vec3& wi_u, const vec3& wo_u) {
         Float si_plus_so_minus_sn = pi * 0.5 * (1 / glm::clamp(wi_u.z, 0.00001f, 0.99999f) + 1 / glm::clamp(wo_u.z, 0.00001f, 0.99999f));
         return 1 - std::exp(std::log(1. - tau_0) / pi  * si_plus_so_minus_sn);
     }
@@ -250,27 +252,31 @@ namespace LT_NAMESPACE {
         return pi * 0.5 * (1. / glm::clamp(wi_u.z, 0.00001f, 0.99999f) - 1.);
     }
 
-    Float MicrograinMicrosurface::G1(const vec3& wh_u, const vec3& wi_u)
+    Float MicrograinMicrosurface::G1(const vec3& wh_u, const vec3& wi_u, const SurfaceInteraction& si)
     {
+        Float tau = tau_0->eval(si);
         if(use_smith || sig_asia_2023)
-            return 1. / (1. + lambda(wi_u));
+            return 1. / (1. + lambda(tau,wi_u));
     
-        return one_to_many(sigma_shadow(wh_u, wi_u));
+        return one_to_many(tau,sigma_shadow(wh_u, wi_u));
         //return std::exp(std::log(1. - tau_0) / pi * sigma_shadow(wh_u, wi_u));
     }
 
     
-    Float MicrograinMicrosurface::G1_0(const vec3& wi_u)
+    Float MicrograinMicrosurface::G1_0(const vec3& wi_u, const SurfaceInteraction& si)
     {
-        return one_to_many(sigma_shadow_0(wi_u));
+        Float tau = tau_0->eval(si);
+        return one_to_many(tau, sigma_shadow_0(wi_u));
         //return std::exp(std::log(1. - tau_0) / pi * sigma_shadow_0(wi_u));
     }
 
 
-    Float MicrograinMicrosurface::G2(const vec3& wh_u, const vec3& wi_u, const vec3& wo_u)
+    Float MicrograinMicrosurface::G2(const vec3& wh_u, const vec3& wi_u, const vec3& wo_u, const SurfaceInteraction& si)
     {
+        Float tau = tau_0->eval(si);
+
         if(use_smith || sig_asia_2023)
-            return G1(wh_u, wi_u) * G1(wh_u, wo_u);
+            return G1(wh_u, wi_u, si) * G1(wh_u, wo_u, si);
         
         
         Float s_i = sigma_shadow(wh_u, wi_u);
@@ -330,15 +336,16 @@ namespace LT_NAMESPACE {
             
 
         }
-        return one_to_many(s_shadow);
+        return one_to_many( tau, s_shadow);
         //return std::exp(std::log(1. - tau_0) / pi * s_shadow);
     }
 
-    Float MicrograinMicrosurface::G2_0(const vec3& wi_u, const vec3& wo_u)
+    Float MicrograinMicrosurface::G2_0(const vec3& wi_u, const vec3& wo_u, const SurfaceInteraction& si)
     {
+        Float tau = tau_0->eval(si);
 
         if (use_smith || sig_asia_2023)
-            return G1_0(wi_u) * G1_0(wo_u);
+            return G1_0(wi_u, si) * G1_0(wo_u, si);
 
 
         Float s_i = sigma_shadow_0(wi_u);
@@ -377,7 +384,7 @@ namespace LT_NAMESPACE {
             }
 
         }
-        Float G2_0_ = one_to_many(s_shadow);
+        Float G2_0_ = one_to_many( tau, s_shadow);
         //Float G2_0_ = std::exp(std::log(1. - tau_0) / pi * s_shadow);
         assert(G2_0_ == G2_0_);
         return G2_0_;

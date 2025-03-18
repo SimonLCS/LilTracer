@@ -14,8 +14,7 @@
 
 namespace LT_NAMESPACE {
 
-//#define PARAMETER(type, name, default_values) type name = type(default_values)
-
+class SurfaceInteraction;
 
 /**
  * @brief Base class for Bidirectional Reflectance Distribution Functions

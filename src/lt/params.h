@@ -14,6 +14,8 @@ namespace LT_NAMESPACE {
 enum class ParamType {
     BOOL, /**< BOOL type parameter. */
     FLOAT, /**< Float type parameter. */
+    FLOAT_TEX, /**< FloatTex type parameter. */
+    SPECTRUM_TEX, /**< FloatTex type parameter. */
     INT, /**< Int type parameter. */
     VEC3, /**< Vector3 type parameter. */
     MAT4, /**< Matrix 4x4 type parameter . */

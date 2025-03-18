@@ -8,7 +8,7 @@ namespace LT_NAMESPACE {
 ///////////////////
 Spectrum Emissive::emission()
 {
-    return intensity.mean;
+    return intensity;
 }
 
 } // namespace LT_NAMESPACE

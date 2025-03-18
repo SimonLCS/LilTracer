@@ -12,7 +12,7 @@ namespace LT_NAMESPACE {
 
 class Emissive : public Brdf {
 public:
-    SpectrumTex intensity; /**< Intensity of emission. */
+    vec3 intensity; /**< Intensity of emission. */
 
     Emissive()
         : Brdf("Emissive")

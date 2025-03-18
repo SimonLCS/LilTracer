@@ -423,8 +423,8 @@ public:
             if (si.brdf->is_emissive())
                 return si.brdf->emission();
 
-            //s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : sample_one_light(r, si, scene, sampler);
-            s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : uniform_sample_one_light(r, si, scene, sampler);
+            s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : sample_one_light(r, si, scene, sampler);
+            //s += sample_all_lights ? uniform_sample_all_light(r, si, scene, sampler) : uniform_sample_one_light(r, si, scene, sampler);
         } else {
             for (const auto& light : scene.infinite_lights)
                 s += light->eval(r.d);

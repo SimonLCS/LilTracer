@@ -7,18 +7,18 @@ namespace LT_NAMESPACE {
 // BeckmannMicrosurface
 ///////////////////
 
-Float BeckmannMicrosurface::D(const vec3& wh_u) {
+Float BeckmannMicrosurface::D(const vec3& wh_u, const SurfaceInteraction& si) {
     Float cos_theta_h_sqr = wh_u.z * wh_u.z;
     Float tan_theta_h_sqr = (1 - cos_theta_h_sqr) / cos_theta_h_sqr;
     return std::exp(-tan_theta_h_sqr) / (cos_theta_h_sqr* cos_theta_h_sqr * pi);
 }
 
-Float BeckmannMicrosurface::pdf(const vec3& wh_u)
+Float BeckmannMicrosurface::pdf(const vec3& wh_u, const SurfaceInteraction& si)
 {
-    return D(wh_u) * wh_u.z;
+    return D(wh_u, si) * wh_u.z;
 }
 
-vec3 BeckmannMicrosurface::sample_D(Sampler& sampler)
+vec3 BeckmannMicrosurface::sample_D(Sampler& sampler, const SurfaceInteraction& si)
 {
     Float log_sample = std::log(1 - sampler.next_float());
     if (std::isinf(log_sample)) log_sample = 0;
@@ -42,28 +42,28 @@ Float BeckmannMicrosurface::lambda(const vec3& wi_u)
     return (1 - 1.259f * a + 0.396f * a * a) / (3.535f * a + 2.181f * a * a);
 }
 
-Float BeckmannMicrosurface::G1(const vec3& wh_u, const vec3& wi_u) {
+Float BeckmannMicrosurface::G1(const vec3& wh_u, const vec3& wi_u, const SurfaceInteraction& si) {
     return 1. / (1. + lambda(wi_u));
 }
 
-Float BeckmannMicrosurface::G2(const vec3& wh_u, const vec3& wi_u, const vec3& wo_u) {
+Float BeckmannMicrosurface::G2(const vec3& wh_u, const vec3& wi_u, const vec3& wo_u, const SurfaceInteraction& si) {
     // [Ross05]
     return 1. / (1. + lambda(wi_u) + lambda(wo_u));
 }
 
-Float BeckmannMicrosurface::D(const vec3& wh_u, const vec3& wi_u)
+Float BeckmannMicrosurface::D(const vec3& wh_u, const vec3& wi_u, const SurfaceInteraction& si)
 {
-    return D(wh_u);
+    return D(wh_u, si);
 }
 
-Float BeckmannMicrosurface::pdf(const vec3& wh_u, const vec3& wi_u)
+Float BeckmannMicrosurface::pdf(const vec3& wh_u, const vec3& wi_u, const SurfaceInteraction& si)
 {
-    return pdf(wh_u);
+    return pdf(wh_u, si);
 }
 
-vec3 BeckmannMicrosurface::sample_D(const vec3& wi_u, Sampler& sampler)
+vec3 BeckmannMicrosurface::sample_D(const vec3& wi_u, Sampler& sampler, const SurfaceInteraction& si)
 {
-    return sample_D(sampler);
+    return sample_D(sampler, si);
 }
 
 
