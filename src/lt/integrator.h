@@ -120,11 +120,11 @@ public:
      */
     virtual Spectrum render_pixel(Ray& r, Scene& scene, Sampler& sampler) = 0;
 
-    // TODO: add infinite_light support
+
     Spectrum sample_one_light(Ray& r, SurfaceInteraction& si,
         Scene& scene, Sampler& sampler)
     {
-        int n_light = scene.lights.size();
+        int n_light = scene.lights.size() + scene.infinite_lights.size();
 
         if (n_light == 0)
             return Spectrum(0.);
@@ -222,20 +222,16 @@ public:
         }
 
         Ray rs(si.pos,-ls.direction);
-        //SurfaceInteraction si_next;
-        //bool intersect = scene.intersect(rs, si_next);
 
-        //std::cout << light->geometry_id() << std::endl;
-
-        ///return Spectrum(si_next.geom_id, si.geom_id, light->geometry_id());
-        /*if (intersect && light->geometry_id() == si_next.geom_id)
-            return Spectrum(0., 0., 1.);
-        else if (intersect && si.geom_id == si_next.geom_id)
-            return Spectrum(0., 1., 0.);
-        else
-            return Spectrum(1., 0., 0.);*/
-        //if (intersect  ) {
-        if (!scene.shadow_to(rs, ls.expected_distance_to_intersection)) {
+        bool vis = false;
+        if (light->is_infinite()) {
+            vis = scene.shadow(rs);
+        }
+        else {
+            vis = scene.shadow_to(rs, ls.expected_distance_to_intersection);
+        }
+            
+        if (!vis) {
 
             if (wi.z < 0.00001) {
                 return contrib;
@@ -244,7 +240,7 @@ public:
             Spectrum brdf_contrib = si.brdf->eval(wi, wo, si, sampler);
             #if defined(USE_MIS)
             if (light->is_dirac()) {
-                contrib += brdf_contrib * ls.emission / ls.pdf;
+                contrib += brdf_contrib * ls.emission;
             } else {
                 Float brdf_pdf = si.brdf->pdf(wi, wo, si);
                 assert(brdf_pdf == brdf_pdf);
@@ -387,11 +383,11 @@ public:
         return render_pixel_rec(r, scene, sampler, 0);
     }
 
-    int max_depth;
+    uint32_t max_depth;
 
 protected:
     void link_params() { 
-        params.add("max_depth", lt::ParamType::INT, &max_depth);
+        params.add("max_depth", &max_depth);
     }
 };
 
@@ -437,7 +433,7 @@ public:
 
 protected:
     void link_params() {
-        params.add("sample_all_lights", ParamType::BOOL, &sample_all_lights);
+        params.add("sample_all_lights", &sample_all_lights);
     }
 };
 
@@ -527,10 +523,14 @@ public:
 
             }
             else {
+
+                if (d != 0)
+                    return s;
+                    
                 for (const auto& light : scene.infinite_lights) {
                     s += throughput * light->eval(r.d);
-                    return s;
                 }
+                return s;
             }
         }
 
@@ -541,7 +541,7 @@ public:
 protected:
     void link_params() 
     { 
-        params.add("max_depth", ParamType::INT, &max_depth);
+        params.add("max_depth", &max_depth);
     }
 };
 
@@ -672,7 +672,7 @@ public:
     uint32_t max_depth; /**< Maximum depth of path tracing. */
 protected:
     void link_params() { 
-        params.add("max_depth", ParamType::INT, &max_depth);
+        params.add("max_depth", &max_depth);
         
     }
 };

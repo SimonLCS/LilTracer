@@ -51,7 +51,7 @@ static void json_set_float_tex(const json& j, std::shared_ptr<FloatTex>* ptr, co
  * @param j The JSON value.
  * @param ptr Pointer to the int variable.
  */
-static void json_set_int(const json& j, int* ptr) { *ptr = j; }
+static void json_set_uint(const json& j, int* ptr) { *ptr = j; }
 
 
 /**
@@ -199,8 +199,8 @@ static void set_params(const json& j, const Params& params, const std::string& d
             case ParamType::FLOAT_TEX:
                 json_set_float_tex(j[p.name], (std::shared_ptr<FloatTex>*)p.ptr, dir);
                 break;
-            case ParamType::INT:
-                json_set_int(j[p.name], (int*)p.ptr);
+            case ParamType::UINT:
+                json_set_uint(j[p.name], (int*)p.ptr);
                 break;
             case ParamType::VEC3:
             case ParamType::IOR:

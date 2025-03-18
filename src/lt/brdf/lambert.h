@@ -40,7 +40,7 @@ public:
     float pdf(const vec3& wi, const vec3& wo, const SurfaceInteraction& si);
 
 protected:
-    void link_params() { params.add("albedo", ParamType::SPECTRUM_TEX, &albedo); }
+    void link_params() { params.add("albedo", &albedo); }
 };
 
 } // namespace LT_NAMESPACE

@@ -24,7 +24,7 @@ namespace LT_NAMESPACE {
         s.direction = dir;
         s.emission = Spectrum(intensity);
         s.pdf = 1;
-        s.expected_distance_to_intersection = std::numeric_limits<Float>::infinity();
+        s.expected_distance_to_intersection = 0.;// std::numeric_limits<Float>::infinity();
         return s;
 
     }
@@ -52,8 +52,8 @@ namespace LT_NAMESPACE {
 
     void EnvironmentLight::init()
     {
-        dtheta = pi / (Float)envmap.h;
-        dphi = 2. * pi / (Float)envmap.w;
+        dtheta = pi / (Float)envmap->h;
+        dphi = 2. * pi / (Float)envmap->w;
 
         compute_density();
         c = std::vector<float>(
@@ -83,11 +83,11 @@ namespace LT_NAMESPACE {
         // From inv_cumulative_density
         int id = inv_cumulative_density.data[int(u * inv_cumulative_density.h * inv_cumulative_density.w)];
 
-        int x = id % envmap.w;
-        int y = id / envmap.w;
+        int x = id % envmap->w;
+        int y = id / envmap->w;
 
-        Float theta = pi * ((Float)y + 0.5) / (Float)envmap.h;
-        Float phi = 2. * pi * ((Float)x + 0.5) / (Float)envmap.w;
+        Float theta = pi * ((Float)y + 0.5) / (Float)envmap->h;
+        Float phi = 2. * pi * ((Float)x + 0.5) / (Float)envmap->w;
 
         Float solid_angle = sin(theta) * dphi * dtheta;
 
@@ -101,7 +101,7 @@ namespace LT_NAMESPACE {
         //s.pdf = density.data[id];
 #endif
         s.emission = eval(-s.direction);
-        s.expected_distance_to_intersection = std::numeric_limits<Float>::infinity();
+        s.expected_distance_to_intersection = 0.;// std::numeric_limits<Float>::infinity();
         
         return s;
     }
@@ -118,7 +118,7 @@ namespace LT_NAMESPACE {
         phi = (phi < 0. ? 2 * pi + phi : phi);
         Float u = phi / (2 * pi);
         Float v = glm::acos(direction.y) / pi;
-        return envmap.eval(u, v) * intensity;
+        return envmap->eval(u, v) * intensity;
     }
 
     /**
@@ -152,46 +152,46 @@ namespace LT_NAMESPACE {
     void EnvironmentLight::compute_density()
     {
         // Compute density
-        density.w = envmap.w;
-        density.h = envmap.h;
+        density.w = envmap->w;
+        density.h = envmap->h;
         density.initialize();
 
-        for (int y = 0; y < envmap.h; y++) {
-            Float theta = pi * ((Float)y + 0.5) / (Float)envmap.h;
+        for (int y = 0; y < envmap->h; y++) {
+            Float theta = pi * ((Float)y + 0.5) / (Float)envmap->h;
             Float sin_theta = std::sin(theta);
             Float solid_angle = sin_theta * dphi * dtheta;
-            for (int x = 0; x < envmap.w; x++) {
-                Spectrum s = envmap.get(x, y);
+            for (int x = 0; x < envmap->w; x++) {
+                Spectrum s = envmap->get(x, y);
                 Float mean = (s.r + s.g + s.b) * 0.333333f;
                 density.set(x, y, mean * sin_theta);
             }
         }
 
         // Compute cumulative density
-        cumulative_density.w = envmap.w;
-        cumulative_density.h = envmap.h;
+        cumulative_density.w = envmap->w;
+        cumulative_density.h = envmap->h;
         cumulative_density.initialize();
         cumulative_density.data[0] = density.data[0];
-        for (int n = 1; n < envmap.w * envmap.h; n++) {
+        for (int n = 1; n < envmap->w * envmap->h; n++) {
             cumulative_density.data[n] = cumulative_density.data[n - 1] + density.data[n];
         }
 
-        power_ = cumulative_density.data[envmap.w * envmap.h - 1] * intensity;
+        power_ = cumulative_density.data[envmap->w * envmap->h - 1] * intensity;
 
         // Normalize density
-        for (int n = 0; n < envmap.w * envmap.h; n++) {
-            density.data[n] /= cumulative_density.data[envmap.w * envmap.h - 1];
-            cumulative_density.data[n] /= cumulative_density.data[envmap.w * envmap.h - 1];
+        for (int n = 0; n < envmap->w * envmap->h; n++) {
+            density.data[n] /= cumulative_density.data[envmap->w * envmap->h - 1];
+            cumulative_density.data[n] /= cumulative_density.data[envmap->w * envmap->h - 1];
         }
 
-        inv_cumulative_density.w = envmap.w;
-        inv_cumulative_density.h = envmap.h;
+        inv_cumulative_density.w = envmap->w;
+        inv_cumulative_density.h = envmap->h;
         inv_cumulative_density.initialize();
 
-        std::vector<Float> u = linspace<Float>(0.,1., envmap.w * envmap.h, true);
+        std::vector<Float> u = linspace<Float>(0.,1., envmap->w * envmap->h, true);
         
-        for (int n = 0; n < envmap.w * envmap.h; n++) {
-            int idx = binary_search<Float>(cumulative_density.data.get(), u[n], envmap.w* envmap.h);
+        for (int n = 0; n < envmap->w * envmap->h; n++) {
+            int idx = binary_search<Float>(cumulative_density.data.get(), u[n], envmap->w* envmap->h);
             inv_cumulative_density.data[n] = idx;
         }
 

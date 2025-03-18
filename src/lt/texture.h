@@ -94,7 +94,7 @@ struct DustTex : Texture<Float>
 
     Float eval(const SurfaceInteraction& si) const override
     {
-        return 0.01+glm::clamp(glm::pow(si.nor.y,2.f),0.f,1.f)*0.4;
+        return 0.001f+glm::pow(glm::smoothstep(0.3f,0.7f, glm::clamp(si.nor.y,0.f,1.f)),2.f) *0.25;
     }
 
     Float eval(const Float& u, const Float& v) const override

@@ -224,9 +224,9 @@ protected:
      */
     void link_params()
     {
-        params.add("filename", ParamType::PATH, &filename);
-        params.add("brdf", ParamType::BRDF, &brdf);
-        params.add("local_to_world", ParamType::MAT4, &local_to_world);
+        params.add("filename", &filename);
+        params.add("brdf", &brdf);
+        params.add("local_to_world", &local_to_world);
     }
 };
 
@@ -274,8 +274,8 @@ protected:
      */
     void link_params()
     {
-        params.add("brdf", ParamType::BRDF, &brdf);
-        params.add("local_to_world", ParamType::MAT4, &local_to_world);
+        params.add("brdf", &brdf);
+        params.add("local_to_world", &local_to_world);
     }
 };
 
@@ -359,10 +359,10 @@ protected:
      */
     void link_params()
     {
-        params.add("pos", ParamType::VEC3, &pos);
-        params.add("rad", ParamType::FLOAT, &rad);
-        params.add("brdf", ParamType::BRDF, &brdf);
-        params.add("local_to_world", ParamType::MAT4, &local_to_world);
+        params.add("pos", &pos);
+        params.add("rad", &rad);
+        params.add("brdf", &brdf);
+        params.add("local_to_world", &local_to_world);
     }
 };
 

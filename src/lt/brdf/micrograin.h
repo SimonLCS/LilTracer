@@ -117,15 +117,15 @@ namespace LT_NAMESPACE {
     protected:
         void link_params()
         {
-            params.add("rough_x", ParamType::FLOAT, &scale[0]);
-            params.add("rough_y", ParamType::FLOAT, &scale[1]);
-            params.add("tau", ParamType::FLOAT_TEX, &(ms.tau_0));
-            params.add("eta", ParamType::SPECTRUM_TEX, &eta);
-            params.add("kappa", ParamType::SPECTRUM_TEX, &kappa);
-            params.add("height_and_direction", ParamType::BOOL, &(ms.height_and_direction));
-            params.add("use_smith", ParamType::BOOL, &(ms.use_smith));
-            params.add("sig_asia_2023", ParamType::BOOL, &(ms.sig_asia_2023));
-            params.add("base", ParamType::BRDF, &base);
+            params.add("rough_x", &scale[0]);
+            params.add("rough_y", &scale[1]);
+            params.add("tau", &(ms.tau_0));
+            params.add("eta", &eta);
+            params.add("kappa", &kappa);
+            params.add("height_and_direction", &(ms.height_and_direction));
+            params.add("use_smith", &(ms.use_smith));
+            params.add("sig_asia_2023", &(ms.sig_asia_2023));
+            params.add("base", &base);
         }
         
     };
@@ -188,12 +188,12 @@ namespace LT_NAMESPACE {
     protected:
         void link_params()
         {
-            params.add("rough_x", ParamType::FLOAT, &scale[0]);
-            params.add("rough_y", ParamType::FLOAT, &scale[1]);
-            params.add("tau", ParamType::FLOAT_TEX, &(ms.tau_0));
-            params.add("albedo", ParamType::SPECTRUM_TEX, &albedo);
-            params.add("use_smith", ParamType::BOOL, &(ms.use_smith));
-            params.add("base", ParamType::BRDF, &base);
+            params.add("rough_x", &scale[0]);
+            params.add("rough_y", &scale[1]);
+            params.add("tau", &(ms.tau_0));
+            params.add("albedo", &albedo);
+            params.add("use_smith", &(ms.use_smith));
+            params.add("base", &base);
         }
     };
 

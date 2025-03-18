@@ -119,8 +119,8 @@ namespace LT_NAMESPACE {
          */
         void link_params()
         {
-            params.add("dir", ParamType::VEC3, &dir);
-            params.add("intensity", ParamType::FLOAT, &intensity);
+            params.add("dir", &dir);
+            params.add("intensity", &intensity);
         }
     };
 
@@ -132,6 +132,7 @@ namespace LT_NAMESPACE {
         EnvironmentLight()
             : Light("EnvironmentLight")
         {
+            envmap = std::make_shared<SpectrumTex>(Spectrum(1.));
             flags = Flags::infinite;
             link_params();
         }
@@ -147,7 +148,7 @@ namespace LT_NAMESPACE {
 
         void init();
 
-        Texture<Spectrum> envmap;
+        std::shared_ptr<SpectrumTex> envmap;
         Float intensity;
 
         Texture<Float> density;
@@ -162,8 +163,8 @@ namespace LT_NAMESPACE {
     protected:
         void link_params()
         {
-            params.add("texture", ParamType::TEXTURE, &envmap);
-            params.add("intensity", ParamType::FLOAT, &intensity);
+            params.add("texture", &envmap);
+            params.add("intensity", &intensity);
         }
 
     };

@@ -100,8 +100,8 @@ public:
 protected:
     void link_params()
     {
-        params.add("width", ParamType::INT, &w);
-        params.add("height", ParamType::INT, &h);
+        params.add("width", &w);
+        params.add("height", &h);
     }
 };
 

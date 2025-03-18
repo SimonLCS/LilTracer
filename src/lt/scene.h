@@ -21,22 +21,23 @@ public:
 
     PowerStrategie(std::vector<std::shared_ptr<Light>>& lights_, std::vector<std::shared_ptr<Light>>& infinite_lights_) {
 
-        lights = &lights_;
-        infinite_lights = &infinite_lights_;
+        lights.reserve(lights_.size() + infinite_lights_.size());
+        lights.insert(lights.end(), lights_.begin(), lights_.end());
+        lights.insert(lights.end(), infinite_lights_.begin(), infinite_lights_.end());
 
-        lights_cdf.resize(lights->size() + 1);
-        lights_pdf.resize(lights->size());
+        lights_cdf.resize(lights.size() + 1);
+        lights_pdf.resize(lights.size());
 
-        for (int i = 0; i < lights->size(); i++) {
-            lights_pdf[i] = (*lights)[i]->power();
+        for (int i = 0; i < lights.size(); i++) {
+            lights_pdf[i] = lights[i]->power();
         }
 
         lights_cdf[0] = 0;
-        for (int i = 0; i < lights->size(); i++) {
+        for (int i = 0; i < lights.size(); i++) {
             lights_cdf[i + 1] = lights_cdf[i] + lights_pdf[i];
         }
 
-        for (int i = 0; i < lights->size(); i++) {
+        for (int i = 0; i < lights.size(); i++) {
             lights_pdf[i] /= lights_cdf[lights_cdf.size() - 1];
             lights_cdf[i + 1] /= lights_cdf[lights_cdf.size() - 1];
         }
@@ -47,7 +48,7 @@ public:
 
         int light_idx = binary_search(lights_cdf, u);
 
-        const std::shared_ptr<Light>& light = (*lights)[light_idx];
+        const std::shared_ptr<Light>& light = lights[light_idx];
 
         *pdf = lights_pdf[light_idx];
         return light;
@@ -55,8 +56,7 @@ public:
 
     std::vector<Float> lights_cdf;
     std::vector<Float> lights_pdf;
-    std::vector<std::shared_ptr<Light>>* lights;
-    std::vector<std::shared_ptr<Light>>* infinite_lights;
+    std::vector<std::shared_ptr<Light>> lights;
 };
 
 // Todo add infinite_lights supports
@@ -66,21 +66,21 @@ class SpatialPowerStrategie {
         std::vector<Float> lights_cdf;
         std::vector<Float> lights_pdf;
         
-        Probe(const vec3& pos, std::vector<std::shared_ptr<Light>>* lights) {
-            lights_cdf.resize(lights->size() + 1);
-            lights_pdf.resize(lights->size());
+        Probe(const vec3& pos, std::vector<std::shared_ptr<Light>>& lights) {
+            lights_cdf.resize(lights.size() + 1);
+            lights_pdf.resize(lights.size());
 
-            for (int i = 0; i < lights->size(); i++) {
-                float dist = (*lights)[i]->distance(pos);
-                lights_pdf[i] = (*lights)[i]->power() / (dist * dist);
+            for (int i = 0; i < lights.size(); i++) {
+                float dist = lights[i]->is_infinite() ? 1.f : lights[i]->distance(pos);
+                lights_pdf[i] = lights[i]->power() / (dist * dist);
             }
 
             lights_cdf[0] = 0;
-            for (int i = 0; i < lights->size(); i++) {
+            for (int i = 0; i < lights.size(); i++) {
                 lights_cdf[i + 1] = lights_cdf[i] + lights_pdf[i];
             }
 
-            for (int i = 0; i < lights->size(); i++) {
+            for (int i = 0; i < lights.size(); i++) {
                 lights_pdf[i] /= lights_cdf[lights_cdf.size() - 1];
                 lights_cdf[i + 1] /= lights_cdf[lights_cdf.size() - 1];
             }
@@ -106,7 +106,7 @@ class SpatialPowerStrategie {
 
         std::vector<std::vector<std::vector<Probe>>> probes;
  
-        Probe3DGrid(std::vector<std::shared_ptr<Light>>* lights, const Bbox& b, const int& subdiv): bbox(b) {
+        Probe3DGrid(std::vector<std::shared_ptr<Light>>& lights, const Bbox& b, const int& subdiv): bbox(b) {
             
             float maxdif = glm::max(bbox.pmax.x - bbox.pmin.x, bbox.pmax.y - bbox.pmin.y, bbox.pmax.z - bbox.pmin.z);
 
@@ -134,6 +134,7 @@ class SpatialPowerStrategie {
 
         Probe& fetch(vec3 pos) {
             glm::uvec3 idx = glm::uvec3(vec3(subdiv_x, subdiv_y, subdiv_z) * ((pos - bbox.pmin) / (bbox.pmax - bbox.pmin)));
+            idx = glm::clamp(idx, glm::uvec3(0), glm::uvec3(subdiv_x - 1, subdiv_y - 1, subdiv_z - 1));
             return probes[idx.x][idx.y][idx.z];
         };
     };
@@ -142,8 +143,9 @@ public:
 
     SpatialPowerStrategie(std::vector<std::shared_ptr<Light>>& lights_, std::vector<std::shared_ptr<Light>>& infinite_lights_, const Bbox& bbox, const int& subdiv = 10) {
 
-        lights = &lights_;
-        infinite_lights = &infinite_lights_;
+        lights.reserve(lights_.size() + infinite_lights_.size());
+        lights.insert(lights.end(), lights_.begin(), lights_.end());
+        lights.insert(lights.end(), infinite_lights_.begin(), infinite_lights_.end());
 
         grid = std::make_unique<Probe3DGrid>(lights, bbox, subdiv);
 
@@ -152,13 +154,11 @@ public:
     std::shared_ptr<Light> sample(const vec3& pos, const Float& u, Float* pdf) {
         Probe& probe = grid->fetch(pos);    
         int light_idx = probe.sample(u, pdf);
-        const std::shared_ptr<Light>& light = (*lights)[light_idx];
+        const std::shared_ptr<Light>& light = lights[light_idx];
         return light;
     }
 
-    std::vector<std::shared_ptr<Light>>* lights;
-    std::vector<std::shared_ptr<Light>>* infinite_lights;
-
+    std::vector<std::shared_ptr<Light>> lights;
     std::unique_ptr<Probe3DGrid> grid;
 };
 
@@ -346,7 +346,7 @@ public:
         }
         
         ps = std::make_shared<PowerStrategie>(lights, infinite_lights);
-        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 500);
+        sps = std::make_shared<SpatialPowerStrategie>(lights, infinite_lights, bbox, 50);
 
     }
 

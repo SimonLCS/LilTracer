@@ -88,10 +88,10 @@ protected:
      */
     void link_params()
     {
-        params.add("pos", ParamType::VEC3, &pos);
-        params.add("center", ParamType::VEC3, &center);
-        params.add("aspect", ParamType::FLOAT, &aspect);
-        params.add("fov", ParamType::FLOAT, &fov);
+        params.add("pos", &pos);
+        params.add("center", &center);
+        params.add("aspect", &aspect);
+        params.add("fov", &fov);
     }
 
 };
@@ -147,11 +147,11 @@ protected:
      */
     void link_params()
     {
-        params.add("theta", ParamType::FLOAT, &theta);
-        params.add("phi", ParamType::FLOAT, &phi);
-        params.add("center", ParamType::VEC3, &center);
-        params.add("size", ParamType::FLOAT, &size);
-        params.add("offset", ParamType::FLOAT, &offset);
+        params.add("theta", &theta);
+        params.add("phi", &phi);
+        params.add("center", &center);
+        params.add("size", &size);
+        params.add("offset", &offset);
     }
 
 };
