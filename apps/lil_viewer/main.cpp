@@ -477,6 +477,18 @@ static void draw_param_gui(const std::shared_ptr<T>& obj,std::string prev="") {
             draw_param_gui(*((std::shared_ptr<lt::Brdf>*)p.ptr),param_name);
             ImGui::Separator();
             break;
+        case lt::ParamType::FLOAT_TEX:
+            {
+                std::shared_ptr<lt::FloatTex> t = *(std::shared_ptr<lt::FloatTex>*)p.ptr;
+                IF_CHANGED(ImGui::DragFloat(param_name.c_str(), (float*)t->data.get(), 0.01, 0.001, 3.));
+            }
+            break;
+        case lt::ParamType::SPECTRUM_TEX: 
+            {
+                std::shared_ptr<lt::SpectrumTex> t = *(std::shared_ptr<lt::SpectrumTex>*)p.ptr;
+                IF_CHANGED(ImGui::ColorEdit3(param_name.c_str(), (float*)t->data.get() ));
+            }
+            break;
         default:
             break;
         }
