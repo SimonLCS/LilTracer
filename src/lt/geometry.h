@@ -186,6 +186,7 @@ public:
             for (int j = 0; j < 3; j++) {
                 int iv = fobj->indices[3 * i + j].p;
                 int in = fobj->indices[3 * i + j].n;
+                int it = fobj->indices[3 * i + j].t;
 
                 std::map<std::pair<uint32_t, uint32_t>, uint32_t>::iterator iter = exist.find({ iv, in });
                 if (iter != exist.end()) {
@@ -205,7 +206,7 @@ public:
                     vertex.push_back(vec3(local_to_world * local_vertex));
                     normal.push_back(vec3(inv_tra_local_to_world * local_normal));
 
-                    uv.push_back(vec2(fobj->texcoords[2 * in], fobj->texcoords[2 * in + 1]));
+                    uv.push_back(vec2(fobj->texcoords[2 * it], fobj->texcoords[2 * it + 1]));
                 }
             }
 

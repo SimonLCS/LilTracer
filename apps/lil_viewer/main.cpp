@@ -389,7 +389,8 @@ void render_overlay(lt::RendererAsync& ren, const ImVec2& work_pos, bool& pause)
 
     ImGui::SetNextWindowPos(work_pos, ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.25f); // Transparent background
-    if (ImGui::BeginChild("overlay", ImVec2(125,110), &p_open, window_flags))
+     
+    if (ImGui::BeginChild("overlay", ImVec2(125,110), 0, window_flags))
     {
         if (ImGui::Button("Save")) {
             lt::save_sensor_exr(*ren.sensor, "save.exr");
@@ -455,7 +456,7 @@ static void draw_param_gui(const std::shared_ptr<T>& obj,std::string prev="") {
         case lt::ParamType::BOOL:
             IF_CHANGED(ImGui::Checkbox(param_name.c_str(), (bool*)p.ptr));
             break;
-        case lt::ParamType::INT:
+        case lt::ParamType::UINT:
             IF_CHANGED(ImGui::DragInt(param_name.c_str(), (int*)p.ptr, 0, 1, 12));
             break;
         case lt::ParamType::FLOAT:
@@ -923,7 +924,7 @@ static void app_brdf(AppData& app_data, bool& open) {
 }
 
 static void app_scene(AppData& app_data, bool& open) {
-    int tab = 0;
+    int scn_idx = 0;
     ImGui::Dummy(ImVec2(100., 0.));
     ImGui::SameLine();
     if (ImGui::BeginTabBar("##TabsBRDF"))
@@ -931,29 +932,31 @@ static void app_scene(AppData& app_data, bool& open) {
         for (int i = 0; i < app_data.scenes.size(); i++) {
             if (ImGui::BeginTabItem( app_data.scenes[i]->path.c_str() ) )
             {
-                tab = i;
+                scn_idx = i;
                 ImGui::EndTabItem();
             }
         }
 
         if (ImGui::BeginTabItem("+"))
         {
-            tab = -1;
+            scn_idx = -1;
             ImGui::Text("Drag and Drop .json scene file in the application");
             ImGui::EndTabItem();
         }
 
         ImGui::EndTabBar();
     }
-    app_data.scn_idx = tab;
-    ImGui::BeginGroup();
-    tab_scene_left_panel(app_data, open);
-    ImGui::EndGroup();
-    ImGui::SameLine();
+    if (scn_idx >= 0) {
+        app_data.scn_idx = scn_idx;
+        ImGui::BeginGroup();
+        tab_scene_left_panel(app_data, open);
+        ImGui::EndGroup();
+        ImGui::SameLine();
 
-    ImGui::BeginGroup();
-    tab_scene_render(tab, app_data, open, false);
-    ImGui::EndGroup();
+        ImGui::BeginGroup();
+        tab_scene_render(scn_idx, app_data, open, false);
+        ImGui::EndGroup();
+    }
 }
 
 static void app_layout(glm::ivec4& win_frame, AppData& app_data, bool& open)

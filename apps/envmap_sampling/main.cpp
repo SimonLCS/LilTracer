@@ -39,7 +39,7 @@ struct RenderTexture {
         }
 
         glBindTexture(GL_TEXTURE_2D, texture_id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h, 0, GL_RGB, GL_FLOAT, (float*)texture->data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->w, texture->h, 0, GL_RGB, GL_FLOAT, (float*)(texture->data.get()));
         return true;
     }
 
@@ -83,7 +83,7 @@ void AppInit(AppData& app_data) {
     app_data.envmap = std::make_shared<lt::EnvironmentLight>();
     lt::load_texture_exr(exec_path +"./../../data/envmaps/hallstatt4_hd.exr", app_data.envmap->envmap);
     app_data.envmap->init();
-    app_data.rt.texture = &app_data.envmap->envmap;
+    app_data.rt.texture = app_data.envmap->envmap.get();
     app_data.rt.initialize();
 
     app_data.sampler.seed(0);
@@ -106,9 +106,9 @@ void AppInit(AppData& app_data) {
         
         float phi = std::atan2(app_data.samples[i].z, app_data.samples[i].x);
         phi = phi > 0. ? phi : 2 * lt::pi + phi;
-        app_data.x[i] = phi / (2. * lt::pi) * (float)app_data.envmap->envmap.w;
-        app_data.y[i] = std::acos(app_data.samples[i].y) / lt::pi * (float)app_data.envmap->envmap.h;
-        app_data.y[i] = (float)app_data.envmap->envmap.h - app_data.y[i] - 1;
+        app_data.x[i] = phi / (2. * lt::pi) * (float)app_data.envmap->envmap->w;
+        app_data.y[i] = std::acos(app_data.samples[i].y) / lt::pi * (float)app_data.envmap->envmap->h;
+        app_data.y[i] = (float)app_data.envmap->envmap->h - app_data.y[i] - 1;
 
     }
 
@@ -133,7 +133,7 @@ static void AppLayout(GLFWwindow* window, AppData& app_data)
 
         if (ImPlot::BeginPlot("##image", "", "", ImVec2(-1, -1), ImPlotFlags_Equal)) {
 
-            ImPlot::PlotImage("BRDF slice", (ImTextureID)app_data.rt.texture_id, ImVec2(0, 0), ImVec2(app_data.envmap->envmap.w, app_data.envmap->envmap.h));
+            ImPlot::PlotImage("BRDF slice", (ImTextureID)app_data.rt.texture_id, ImVec2(0, 0), ImVec2(app_data.envmap->envmap->w, app_data.envmap->envmap->h));
             ImPlot::PlotScatter("Samples", app_data.x.data(), app_data.y.data(), app_data.nsample);
             ImPlot::EndPlot();
 

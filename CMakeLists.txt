@@ -30,9 +30,7 @@ add_clang_format_target(format-liltracer src)
 # ----------------------------------------------------------------------------
 
 add_subdirectory(apps/lil_viewer)
-add_subdirectory(apps/brdf_viewer)
 add_subdirectory(apps/lil_tracer)
-add_subdirectory(apps/convergence)
 add_subdirectory(apps/envmap_sampling)
 
 # ----------------------------------------------------------------------------

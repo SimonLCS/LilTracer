@@ -63,7 +63,7 @@ public:
 #endif
 #if 1
         int block_size = 16;
-        #pragma omp parallel for collapse(2) schedule(dynamic)
+        #pragma omp parallel for collapse(2) schedule(dynamic) num_threads(40)
         for (int h = 0; h < sensor->h / block_size + 1; h++)
             for (int w = 0; w < sensor->w / block_size + 1; w++) {
                 Sampler s;
